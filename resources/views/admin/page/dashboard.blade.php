@@ -9,7 +9,7 @@
 
     <div class="bg-white p-6 rounded-lg shadow-md">
         <p class="text-gray-700">
-            Ini adalah halaman dashboard admin Anda. Anda bisa mengelola user, melihat laporan,
+            Ini adalah halaman dashboard admin. Anda bisa mengelola user, melihat laporan,
             dan mengatur konten dari sini.
         </p>
     </div>
