@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\User\HomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,9 +17,23 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('login');
 });
 
-Route::get('/home', [HomeController::class, 'index']);
+Route::controller(AuthController::class)->group(function () {
+    Route::get('login', 'showLoginForm')->name('login');
+    Route::post('login', 'login')->name('login.post');
+    Route::post('logout', 'logout')->name('logout');
+});
 
-Route::get('/admin/dashboard', [DashboardController::class, 'index']);
+Route::middleware(['auth'])->group(function () {
+    // Untuk Kasir
+    Route::prefix('kasir')->middleware(['role:kasir'])->name('kasir.')->group(function () {
+        Route::get('/home', [HomeController::class, 'index']);
+    });
+    // Untuk Admin
+    Route::prefix('admin')->middleware(['role:admin'])->name('admin.')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index']);
+    });
+});
+
