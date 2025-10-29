@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('outlet_id')->constrained('outlets')->onDelete('cascade');
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->onDelete('cascade');
+            $table->string('kode_produk');
+            $table->string('image')->nullable();
             $table->string('nama_produk');
             $table->text('deskripsi')->nullable();
             $table->string('harga_jual');

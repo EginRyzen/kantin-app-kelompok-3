@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\User\HomeController;
+use App\Http\Controllers\User\ProductController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -30,6 +32,10 @@ Route::middleware(['auth'])->group(function () {
     // Untuk Kasir
     Route::prefix('kasir')->middleware(['role:kasir'])->name('kasir.')->group(function () {
         Route::get('/home', [HomeController::class, 'index']);
+
+        // Product
+        Route::resource('products', ProductController::class);
+        Route::resource('users', UserController::class);
     });
     // Untuk Admin
     Route::prefix('admin')->middleware(['role:admin'])->name('admin.')->group(function () {
