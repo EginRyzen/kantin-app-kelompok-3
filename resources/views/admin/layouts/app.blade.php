@@ -13,8 +13,8 @@
     <div class="flex h-screen bg-gray-200">
         
         <div class="w-64 bg-white shadow-md">
-            <div class="py-4 px-6 bg-gray-800 text-white">
-                <span class="font-bold text-xl">POS Kantin Admin</span>
+            <div class="py-4 px-6 bg-green-800 text-white">
+                <span class="font-bold text-xl"> Admin</span>
             </div>
             
             @include('admin.partials.sidebar') 
