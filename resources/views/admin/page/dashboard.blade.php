@@ -3,8 +3,13 @@
 @section('title', 'Admin Dashboard')
 
 @section('content')
-    <h1 class="text-3xl font-bold text-gray-900 mb-6">
-        Dashboard Admin
+<div classs="mb-6">
+        <div class="p-6 rounded-lg shadow-md bg-gradient-to-r from-green-500 to-green-700 text-white">
+            <h2 class="text-2xl font-bold">Selamat Datang di Dashboard Admin</h2>
+            <p class="mt-1">Kelola semua outlet dan transaksi Anda dengan mudah.</p>
+        </div>
+    </div>
+
     </h1>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
