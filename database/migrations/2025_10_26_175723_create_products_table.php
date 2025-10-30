@@ -20,10 +20,10 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->string('nama_produk');
             $table->text('deskripsi')->nullable();
-            $table->string('harga_jual');
+            $table->decimal('harga_jual', 15, 2)->default(0);
             $table->integer('stok')->default(0);
-            $table->enum('diskon-tipe', ['percentage', 'fixed'])->nullable();
-            $table->string('diskon_nilai')->nullable();
+            $table->enum('diskon_tipe', ['percentage', 'fixed'])->nullable();
+            $table->decimal('diskon_nilai', 15, 2)->nullable();
             $table->enum('status', ['available', 'unavailable'])->default('available');
             $table->timestamps();
         });

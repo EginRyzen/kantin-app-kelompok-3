@@ -5,6 +5,12 @@
 
 @section('content')
 
+    @if (session('success'))
+        <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg" role="alert">
+            <p class="font-bold">Sukses!</p>
+            <p>{{ session('success') }}</p>
+        </div>
+    @endif
     <!-- Header: Judul Halaman dan Tombol Tambah Produk -->
     <div class="mb-6 flex justify-between items-center">
         <div>
@@ -13,8 +19,8 @@
         </div>
         <a href="{{ route('kasir.products.create') }}"
             class="bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                stroke="currentColor" class="w-6 h-6">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
         </a>
@@ -22,12 +28,11 @@
 
     <!-- Search Bar -->
     <div class="mb-4 relative">
-        <input type="text" placeholder="Cari produk (misal: Nasi Goreng...)"
+        <input name="nama_product" type="text" placeholder="Cari produk (misal: Nasi Goreng...)"
             class="w-full pl-10 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 transition">
         <!-- Ikon search di dalam input -->
-        <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2"
-            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-            stroke="currentColor">
+        <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg"
+            fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round"
                 d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
         </svg>
@@ -37,7 +42,8 @@
     <div class="mb-5">
         <div class="flex space-x-3 overflow-x-auto pb-2" style="scrollbar-width: none; -ms-overflow-style: none;">
             <!-- Scrollbar disembunyikan -->
-            <a href="#" class="px-4 py-2 rounded-full bg-green-600 text-white text-sm font-semibold whitespace-nowrap">
+            <a href="#"
+                class="px-4 py-2 rounded-full bg-green-600 text-white text-sm font-semibold whitespace-nowrap">
                 Semua Produk
             </a>
             <a href="#"
@@ -93,8 +99,8 @@
 
                         <!-- Tombol Kebab Menu (Edit/Delete) -->
                         <button class="text-gray-500 hover:text-gray-800 focus:outline-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-6 h-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
                             </svg>
@@ -116,7 +122,8 @@
                 <!-- Info Produk -->
                 <div class="w-2/3 p-4 relative">
                     <!-- Badge Status -->
-                    <span class="absolute top-4 right-4 bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    <span
+                        class="absolute top-4 right-4 bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                         Stok Habis
                     </span>
 
@@ -134,8 +141,8 @@
 
                         <!-- Tombol Kebab Menu (Edit/Delete) -->
                         <button class="text-gray-500 hover:text-gray-800 focus:outline-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-6 h-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
                             </svg>
