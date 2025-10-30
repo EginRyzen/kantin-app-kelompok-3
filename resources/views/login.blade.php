@@ -7,7 +7,7 @@
     <title>Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Animasi mengambang untuk gambar */
+        
         @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
