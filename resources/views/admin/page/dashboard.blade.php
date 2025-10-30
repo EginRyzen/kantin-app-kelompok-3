@@ -1,9 +1,6 @@
 @extends('admin.layouts.app')
 
 @section('title', 'Admin Dashboard')
-@extends('admin.layouts.app')
-
-@section('title', 'Admin Dashboard')
 
 @section('content')
     <h1 class="text-3xl font-bold text-gray-800 mb-4">
