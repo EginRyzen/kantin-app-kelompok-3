@@ -21,8 +21,13 @@ class Product extends Model
         'deskripsi',
         'harga_jual',
         'stok',
-        'diskon-tipe',
+        'diskon_tipe',
         'diskon_nilai',
         'status',
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

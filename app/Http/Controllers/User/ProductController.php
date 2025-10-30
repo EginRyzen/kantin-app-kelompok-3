@@ -3,89 +3,183 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category; // <-- 1. IMPORT MODEL
-use App\Models\Supplier; // <-- 1. IMPORT MODEL
+use App\Models\Category;
+use App\Models\Supplier;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // <-- 1. IMPORT AUTH
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        // Menampilkan halaman daftar produk
-        return view('user.page.product');
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        // === 2. PERBARUI BAGIAN INI ===
-        // Kita perlu mengambil data Kategori & Supplier
-        // untuk ditampilkan di dropdown formulir
-
-        // Ambil ID outlet dari user yang sedang login
         $outletId = Auth::user()->outlet_id;
 
-        // Ambil Kategori HANYA dari outlet milik user
+        $selectedCategoryId = $request->query('category_id');
+        $searchQuery = $request->query('search');
+
+        $productQuery = Product::where('outlet_id', $outletId)
+            ->with('category')
+            ->latest();
+
+        if ($selectedCategoryId) {
+            $productQuery->where('category_id', $selectedCategoryId);
+        }
+
+        if ($searchQuery) {
+            $productQuery->where('nama_produk', 'LIKE', '%' . $searchQuery . '%');
+        }
+
+        $products = $productQuery->get();
+
+
+        $products = $products->map(function ($product) {
+            $hargaAsli = (float) $product->harga_jual;
+            $diskonTipe = $product->diskon_tipe;
+            $diskonNilai = (float) $product->diskon_nilai;
+            $hargaAkhir = $hargaAsli;
+
+            if ($diskonTipe == 'percentage' && $diskonNilai > 0) {
+                $potongan = ($hargaAsli * $diskonNilai) / 100;
+                $hargaAkhir = $hargaAsli - $potongan;
+            } elseif ($diskonTipe == 'fixed' && $diskonNilai > 0) {
+                $hargaDiskon = $hargaAsli - $diskonNilai;
+                $hargaAkhir = $hargaDiskon > 0 ? $hargaDiskon : 0;
+            }
+            $product->harga_akhir = $hargaAkhir;
+            return $product;
+        });
+
+        $categories = Category::where('outlet_id', $outletId)
+            ->orderBy('nama_kategori', 'asc')
+            ->get();
+
+        return view('user.page.product', compact(
+            'products', 
+            'categories', 
+            'selectedCategoryId', 
+            'searchQuery'
+        ));
+    }
+
+    public function create()
+    {
+        $outletId = Auth::user()->outlet_id;
+
         $categories = Category::where('outlet_id', $outletId)->orderBy('nama_kategori', 'asc')->get();
 
-        // Ambil semua supplier (diasumsikan supplier bersifat global)
         $suppliers = Supplier::orderBy('nama_supplier', 'asc')->get();
-        
-        // Kirim data categories dan suppliers ke view
+
         return view('user.page.product-create', compact('categories', 'suppliers'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        // (Logika untuk validasi dan simpan data akan ada di sini)
-        // Contoh:
-        // $validatedData = $request->validate([ ... validasi ... ]);
-        // Product::create($validatedData);
+        $validatedData = $request->validate([
+            'outlet_id' => 'required|exists:outlets,id',
+            'category_id' => 'required|exists:categories,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'nama_produk' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // Max 2MB
+            'kode_produk' => 'nullable|string|max:100',
+            'deskripsi' => 'nullable|string',
+            'harga_jual' => 'required|numeric|min:0',
+            'stok' => 'required|integer|min:0',
+            'diskon_tipe' => 'nullable|in:percentage,fixed',
+            'diskon_nilai' => 'nullable|numeric|min:0|required_with:diskon_tipe',
+            'status' => 'required|in:available,unavailable',
+        ]);
 
-        // Untuk sekarang, kita redirect kembali ke halaman index
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('products', 'public');
+
+            $validatedData['image'] = $path;
+        }
+
+        Product::create($validatedData);
+
         return redirect()->route('kasir.products.index')
-                         ->with('success', 'Produk baru berhasil ditambahkan!');
+            ->with('success', 'Produk baru berhasil ditambahkan!');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
-        //
+        $product = Product::findOrFail($id);
+
+        if ($product->outlet_id != Auth::user()->outlet_id) {
+            abort(403, 'Anda tidak diizinkan mengedit produk ini.');
+        }
+
+        $outletId = Auth::user()->outlet_id;
+        $categories = Category::where('outlet_id', $outletId)->orderBy('nama_kategori', 'asc')->get();
+        $suppliers = Supplier::orderBy('nama_supplier', 'asc')->get();
+
+        return view('user.page.product-edit', compact('product', 'categories', 'suppliers'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        //
+        $product = Product::findOrFail($id);
+
+        if ($product->outlet_id != Auth::user()->outlet_id) {
+            abort(403, 'Anda tidak diizinkan mengedit produk ini.');
+        }
+
+        $validatedData = $request->validate([
+            'outlet_id' => 'required|exists:outlets,id',
+            'category_id' => 'required|exists:categories,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'nama_produk' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'kode_produk' => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::unique('products')->ignore($product->id),
+            ],
+            'deskripsi' => 'nullable|string',
+            'harga_jual' => 'required|numeric|min:0',
+            'stok' => 'required|integer|min:0',
+            'diskon_tipe' => 'nullable|in:percentage,fixed',
+            'diskon_nilai' => 'nullable|numeric|min:0|required_with:diskon_tipe',
+            'status' => 'required|in:available,unavailable',
+        ]);
+
+        if ($request->hasFile('image')) {
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $path = $request->file('image')->store('products', 'public');
+            $validatedData['image'] = $path;
+        }
+
+        $product->update($validatedData);
+
+        return redirect()->route('kasir.products.index');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        //
+        $product = Product::findOrFail($id);
+
+        if ($product->outlet_id != Auth::user()->outlet_id) {
+            abort(403, 'Anda tidak diizinkan menghapus produk ini.');
+        }
+
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+
+        $product->delete();
+
+        return redirect()->route('kasir.products.index')
+            ->with('success', 'Produk "' . $product->nama_produk . '" berhasil dihapus.');
     }
 }
-
