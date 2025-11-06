@@ -34,8 +34,7 @@ class Outlet extends Model
      */
     public function cashiers()
     {
-        // Mengambil semua 'users' yang terhubung ke outlet_id ini
-        // DAN HANYA yang memiliki 'role' = 'kasir'
+
         return $this->hasMany(User::class)->where('role', 'kasir');
     }
 }

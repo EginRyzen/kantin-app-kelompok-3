@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OutletController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\ProductController;
@@ -47,6 +48,8 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/outlets/{outlet}/toggle-status', [OutletController::class, 'toggleStatus'])->name('outlets.toggleStatus');
 
     Route::resource('outlets', OutletController::class);
+
+    Route::get('/reports/transactions', [ReportController::class, 'index'])->name('reports.transactions');
     });
 });
 

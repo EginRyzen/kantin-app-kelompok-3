@@ -19,4 +19,19 @@ class Transaction extends Model
         'nomor_invoice',
         'total_harga',
     ];
+
+    public function outlet()
+    {
+        return $this->belongsTo(Outlet::class, 'outlet_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
 }
