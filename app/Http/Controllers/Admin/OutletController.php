@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Outlet; // Pastikan Anda sudah membuat model Outlet
 
 class OutletController extends Controller
 {
@@ -12,7 +13,10 @@ class OutletController extends Controller
      */
     public function index()
     {
-        return view('admin.page.outlets.index');
+        // Ambil semua data outlet dari tabel 'outlets'
+        $outlets = Outlet::latest()->paginate(10); 
+
+        return view('admin.page.outlets.index', compact('outlets'));
     }
 
     /**
@@ -20,46 +24,9 @@ class OutletController extends Controller
      */
     public function create()
     {
-        //
+        // (Nanti untuk halaman tambah outlet)
+        return "Halaman Tambah Outlet"; 
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+    // ... (method store, show, edit, update, destroy lainnya) ...
 }

@@ -7,8 +7,7 @@
         <h1 class="text-3xl font-bold text-gray-900">
             Daftar Outlet
         </h1>
-
-    </div>
+        </div>
 
     <div class="bg-white shadow-lg rounded-lg overflow-hidden">
         <div class="overflow-x-auto">
@@ -29,32 +28,45 @@
                         </th>
                     </tr>
                 </thead>
+                
                 <tbody class="bg-white divide-y divide-gray-200">
                     
-                    {{-- Ganti dengan @foreach($outlets as $outlet) dari controller --}}
-                    
+                    @forelse($outlets as $outlet)
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">Kantin Sehat Bu Ida</div>
-                            <div class="text-sm text-gray-500">Gedung A Lt. 1</div>
+                            <div class="text-sm font-medium text-gray-900">{{ $outlet->nama_outlet }}</div>
+                            <div class="text-sm text-gray-500">{{ $outlet->alamat }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                Aktif
-                            </span>
+                            @if($outlet->is_active == 1)
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Aktif
+                                </span>
+                            @else
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    Tidak Aktif
+                                </span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">Rp 1.500.000</div>
+                            <div class="text-sm text-gray-900">-</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="#" class="text-indigo-600 hover:text-indigo-900">
+                            <a href="{{ route('admin.outlets.show', $outlet->id) }}" class="text-indigo-600 hover:text-indigo-900">
                                 Lihat Detail
                             </a>
                         </td>
                     </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                            Belum ada data outlet.
+                        </td>
+                    </tr>
+                    @endforelse
                     
                 </tbody>
-            </table>
+                </table>
         </div>
     </div>
-@endsection 
+@endsection
