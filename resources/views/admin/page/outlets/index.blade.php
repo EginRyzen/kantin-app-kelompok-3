@@ -3,12 +3,12 @@
 @section('title', 'Daftar Outlet')
 
 @section('content')
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">
-            Daftar Outlet
-        </h1>
+    <div class="mb-6">
+        <div class="p-6 rounded-lg shadow-md bg-gradient-to-r from-green-500 to-green-700 text-white">
+            <h2 class="text-2xl font-bold">Manajemen Outlet</h2>
+            <p class="mt-1">Kelola semua outlet yang terdaftar di sistem Anda.</p>
         </div>
-
+    </div>
     <div class="bg-white shadow-lg rounded-lg overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -83,7 +83,7 @@
                     @endforelse
                     
                 </tbody>
-                </table>
+            </table>
         </div>
     </div>
 @endsection

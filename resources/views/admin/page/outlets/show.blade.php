@@ -3,11 +3,15 @@
 @section('title', 'Detail Outlet: ' . $outlet->nama_outlet)
 
 @section('content')
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">
-            Detail Outlet
-        </h1>
-        <a href="{{ route('admin.outlets.index') }}" class="text-green-600 hover:text-green-800 font-medium">
+
+    <div class="mb-6">
+        <div class="p-6 rounded-lg shadow-md bg-gradient-to-r from-green-500 to-green-700 text-white">
+            <h2 class="text-2xl font-bold">Detail Outlet: {{ $outlet->nama_outlet }}</h2>
+            <p class="mt-1">Lihat informasi kasir dan status untuk outlet ini.</p>
+        </div>
+    </div>
+    <div class="flex justify-end mb-6">
+         <a href="{{ route('admin.outlets.index') }}" class="text-green-600 hover:text-green-800 font-medium">
             &larr; Kembali ke Daftar Outlet
         </a>
     </div>
