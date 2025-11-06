@@ -44,6 +44,8 @@ Route::middleware(['auth'])->group(function () {
     // Cukup satu baris ini
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::patch('/outlets/{outlet}/toggle-status', [OutletController::class, 'toggleStatus'])->name('outlets.toggleStatus');
+
     Route::resource('outlets', OutletController::class);
     });
 });
