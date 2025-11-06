@@ -51,11 +51,28 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">-</div>
                         </td>
+                        
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{{ route('admin.outlets.show', $outlet->id) }}" class="text-indigo-600 hover:text-indigo-900">
+                            <a href="{{ route('admin.outlets.show', $outlet->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
                                 Lihat Detail
                             </a>
+
+                            <form action="{{ route('admin.outlets.toggleStatus', $outlet->id) }}" method="POST" class="inline-block">
+                                @csrf
+                                @method('PATCH')
+                                
+                                @if($outlet->is_active == 1)
+                                    <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Anda yakin ingin menonaktifkan outlet ini?')">
+                                        Nonaktifkan
+                                    </button>
+                                @else
+                                    <button type="submit" class="text-green-600 hover:text-green-900" onclick="return confirm('Anda yakin ingin mengaktifkan outlet ini?')">
+                                        Aktifkan
+                                    </button>
+                                @endif
+                            </form>
                         </td>
+                        
                     </tr>
                     @empty
                     <tr>
