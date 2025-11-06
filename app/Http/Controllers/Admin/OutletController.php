@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Outlet; // Pastikan Anda sudah membuat model Outlet
+use App\Models\Outlet;
 
 class OutletController extends Controller
 {
@@ -13,7 +13,6 @@ class OutletController extends Controller
      */
     public function index()
     {
-        // Ambil semua data outlet dari tabel 'outlets'
         $outlets = Outlet::latest()->paginate(10); 
 
         return view('admin.page.outlets.index', compact('outlets'));
@@ -21,23 +20,23 @@ class OutletController extends Controller
 
     public function toggleStatus(Outlet $outlet)
     {
-        // Mengambil status outlet dari database
-        // dan mengubahnya (jika 1 jadi 0, jika 0 jadi 1)
         $outlet->is_active = !$outlet->is_active; 
         $outlet->save();
 
-        // Redirect kembali ke halaman daftar outlet dengan pesan sukses
         return redirect()->route('admin.outlets.index')->with('success', 'Status outlet berhasil diperbarui.');
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Outlet  $outlet
+     * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function show(Outlet $outlet)
     {
-        // (Nanti untuk halaman tambah outlet)
-        return "Halaman Tambah Outlet"; 
-    }
+        $outlet->load('cashiers');
 
-    // ... (method store, show, edit, update, destroy lainnya) ...
+        return view('admin.page.outlets.show', compact('outlet'));
+    }
+    
 }
