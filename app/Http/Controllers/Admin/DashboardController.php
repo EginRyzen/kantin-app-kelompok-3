@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Outlet;
+use App\Models\Transaction;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -12,54 +16,31 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        return view('admin.page.dashboard');
-    }
+        $totalOutlets = Outlet::count();
+        $activeOutlets = Outlet::where('is_active', 1)->count(); //
+        $inactiveOutlets = Outlet::where('is_active', 0)->count(); //
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        $salesData = Transaction::select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('SUM(total_harga) as total_sales') //
+            )
+            ->where('created_at', '>=', Carbon::now()->subDays(7))
+            ->groupBy('date')
+            ->orderBy('date', 'ASC')
+            ->get();
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        $chartLabels = $salesData->pluck('date')->map(function($date) {
+            return Carbon::parse($date)->format('d M');
+        });
+        
+        $chartData = $salesData->pluck('total_sales');
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return view('admin.page.dashboard', compact(
+            'totalOutlets',
+            'activeOutlets',
+            'inactiveOutlets',
+            'chartLabels',
+            'chartData'
+        ));
     }
 }

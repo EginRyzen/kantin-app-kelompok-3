@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OutletController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\ProductController;
@@ -44,7 +46,15 @@ Route::middleware(['auth'])->group(function () {
     });
     // Untuk Admin
     Route::prefix('admin')->middleware(['role:admin'])->name('admin.')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index']);
+    
+    // Cukup satu baris ini
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::patch('/outlets/{outlet}/toggle-status', [OutletController::class, 'toggleStatus'])->name('outlets.toggleStatus');
+
+    Route::resource('outlets', OutletController::class);
+
+    Route::get('/reports/transactions', [ReportController::class, 'index'])->name('reports.transactions');
     });
 });
 
