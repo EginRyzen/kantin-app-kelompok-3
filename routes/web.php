@@ -29,9 +29,9 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('login', 'login')->name('login.post');
     Route::post('logout', 'logout')->name('logout');
 
-    Route::get('register/step-1', 'showRegisterStep1')->name('register.step1');
+    Route::get('register/outlet', 'showRegisterStep1')->name('register.step1');
     Route::post('register/step-1', 'postRegisterStep1')->name('register.step1.post');
-    Route::get('register/step-2', 'showRegisterStep2')->name('register.step2');
+    Route::get('register/user', 'showRegisterStep2')->name('register.step2');
     Route::post('register/step-2', 'postRegisterStep2')->name('register.step2.post');
 });
 

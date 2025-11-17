@@ -1,6 +1,6 @@
 
-<nav class="bg-white shadow-sm py-4 w-[90%] mx-auto">
-    <div class="px-4 sm:px-6 flex justify-between items-center">
+<nav class="bg-white shadow-sm py-4 mx-auto">
+    <div class="px-4 flex justify-between items-center">
         <a href="#" class="text-2xl font-extrabold text-green-700">
             Kantin<span class="text-green-500">App</span>
         </a>
