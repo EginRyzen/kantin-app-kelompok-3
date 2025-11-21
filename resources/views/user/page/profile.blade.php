@@ -3,152 +3,114 @@
 @section('title', 'Profil Kasir')
 
 @section('content')
-{{-- 1. Container Utama: Dibuat lebar (max-w-6xl) agar full di layar laptop/PC --}}
 <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-6xl mx-auto space-y-8">
+  <div class="max-w-4xl mx-auto space-y-6">
 
-    {{-- 2. Header Profil (Desain Banner Lebar) --}}
-    <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 relative overflow-hidden flex flex-col md:flex-row items-center gap-6">
-      {{-- Dekorasi Background Abstrak --}}
-      <div class="absolute top-0 left-0 w-full h-24 md:h-full md:w-1/3 bg-gradient-to-r from-green-400 to-emerald-600 md:rounded-r-[100px] rounded-b-[50%] opacity-10 md:opacity-100 z-0"></div>
+    {{-- Header Profil --}}
+    <div class="bg-white rounded-3xl p-6 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-gray-100 relative overflow-hidden flex flex-col md:flex-row items-center gap-6">
+      <div class="absolute top-0 right-0 w-64 h-64 bg-gray-50 rounded-full blur-3xl -mr-16 -mt-16 z-0 pointer-events-none"></div>
       
-      {{-- Foto Avatar --}}
       <div class="relative z-10 shrink-0">
         <div class="relative inline-block">
-            <img src="https://ui-avatars.com/api/?name={{ Auth::user()->nama_lengkap }}&background=random&size=128" 
-                 alt="Avatar" 
-                 class="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white shadow-xl object-cover bg-white">
-            {{-- Badge Role --}}
-            <span class="absolute bottom-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full border-2 border-white shadow-sm">
-                {{ Auth::user()->role === 'kasir' ? 'KASIR' : 'ADMIN' }}
-            </span>
+            @if(Auth::user()->foto)
+                <img src="{{ asset('storage/' . Auth::user()->foto) }}" alt="Avatar" class="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-gray-50 shadow-lg object-cover">
+            @else
+                <img src="https://ui-avatars.com/api/?name={{ Auth::user()->nama_lengkap }}&background=0F172A&color=fff&size=128" alt="Avatar" class="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-gray-50 shadow-lg object-cover">
+            @endif
+            <span class="absolute bottom-1 right-1 bg-gray-800 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white shadow-sm uppercase">{{ Auth::user()->role }}</span>
         </div>
       </div>
 
-      {{-- Info User --}}
-      <div class="relative z-10 text-center md:text-left md:ml-4 flex-1">
-        <h2 class="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight">{{ Auth::user()->nama_lengkap }}</h2>
-        <p class="text-gray-500 font-medium">{{ Auth::user()->email }}</p>
-        <p class="text-gray-400 text-sm mt-1 flex items-center justify-center md:justify-start gap-1">
-            <i class="fa-solid fa-store"></i>
-            {{ Auth::user()->outlet->nama_outlet ?? 'Outlet Tidak Diketahui' }}
-        </p>
+      <div class="relative z-10 text-center md:text-left flex-1">
+        <h2 class="text-2xl font-extrabold text-gray-800 tracking-tight">{{ Auth::user()->nama_lengkap }}</h2>
+        <p class="text-gray-500 font-medium text-sm">{{ Auth::user()->email }}</p>
+        <div class="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-lg border border-gray-200">
+            <i class="fa-solid fa-store text-gray-500 text-xs"></i>
+            <span class="text-xs font-bold text-gray-600">{{ Auth::user()->outlet->nama_outlet ?? 'Outlet Tidak Diketahui' }}</span>
+        </div>
       </div>
     </div>
 
-    {{-- 3. Statistik Ringkas (Grid 2 Kolom di HP, 4 di PC) --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between transition hover:-translate-y-1 hover:shadow-md duration-300 group">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="bg-green-100 p-2.5 rounded-full text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors">
-                    <i class="fa-solid fa-wallet text-lg"></i>
-                </div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Pendapatan</span>
-            </div>
-            <p class="text-xl font-bold text-gray-800">Rp 1.2jt</p> {{-- Nanti bisa diganti data dinamis --}}
+    {{-- Statistik --}}
+    <div class="grid grid-cols-2 gap-4">
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Pendapatan</span>
+            <p class="text-lg font-extrabold text-gray-800">Rp 1.2jt</p> 
         </div>
-
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between transition hover:-translate-y-1 hover:shadow-md duration-300 group">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="bg-blue-100 p-2.5 rounded-full text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                    <i class="fa-solid fa-receipt text-lg"></i>
-                </div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Transaksi</span>
-            </div>
-            <p class="text-xl font-bold text-gray-800">142</p>
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Transaksi</span>
+            <p class="text-lg font-extrabold text-gray-800">142</p>
         </div>
     </div>
 
-    {{-- 4. MENU UTAMA (Grid Kotak Terpisah Warna-warni) --}}
+    {{-- MENU PINTAS --}}
     <div>
-        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 pl-1">
-            <i class="fa-solid fa-grid-2 text-green-600"></i> Menu Pintas
-        </h3>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <h3 class="text-lg font-bold text-gray-800 mb-4 px-2">Pengaturan Akun</h3>
+        <div class="flex flex-col space-y-3">
             
-            {{-- KOTAK 1: Edit Profil (Warna Orange) --}}
-            <a href="{{ route('kasir.users.edit', Auth::id()) }}" 
-               class="relative overflow-hidden block p-6 rounded-2xl bg-orange-50 border border-orange-100 hover:bg-orange-100 hover:shadow-md hover:border-orange-200 transition-all duration-300 group">
-                {{-- Ikon Besar Transparan di Background --}}
-                <div class="absolute -top-2 -right-2 p-4 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 group-hover:rotate-12">
-                    <i class="fa-solid fa-user-pen text-8xl text-orange-500"></i>
-                </div>
-                
-                <div class="relative z-10">
-                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-orange-500 shadow-sm mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-user-pen text-xl"></i>
+            {{-- ITEM 1: Link ke File Baru (profile-edit) --}}
+            {{-- PASTIKAN ROUTE DI WEB.PHP SESUAI YA, misal: kasir.profile.edit --}}
+            <a href="{{ route('kasir.profile.edit') }}" 
+               class="group flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-user-gear"></i>
                     </div>
-                    <h4 class="text-lg font-bold text-gray-800">Edit Data Diri</h4>
-                    <p class="text-sm text-gray-600 mt-1 leading-relaxed">Perbarui nama, email, & informasi akun Anda.</p>
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">Edit Data Diri & Keamanan</h4>
+                        <p class="text-xs text-gray-500">Update foto, bio, & kata sandi</p>
+                    </div>
                 </div>
+                <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-gray-500 transition-colors text-sm"></i>
             </a>
 
-            {{-- KOTAK 2: Keamanan (Warna Ungu) --}}
-            <a href="#" 
-               class="relative overflow-hidden block p-6 rounded-2xl bg-purple-50 border border-purple-100 hover:bg-purple-100 hover:shadow-md hover:border-purple-200 transition-all duration-300 group">
-                <div class="absolute -top-2 -right-2 p-4 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 group-hover:rotate-12">
-                    <i class="fa-solid fa-lock text-8xl text-purple-500"></i>
-                </div>
-                <div class="relative z-10">
-                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-purple-500 shadow-sm mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-lock text-xl"></i>
+            {{-- ITEM 2: Kelola Produk --}}
+            <a href="{{ route('kasir.products.index') }}" class="group flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-box-open"></i>
                     </div>
-                    <h4 class="text-lg font-bold text-gray-800">Keamanan</h4>
-                    <p class="text-sm text-gray-600 mt-1 leading-relaxed">Ubah password & pengaturan privasi akun.</p>
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">Kelola Produk</h4>
+                        <p class="text-xs text-gray-500">Menu & Stok barang</p>
+                    </div>
                 </div>
+                <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-gray-500 transition-colors text-sm"></i>
             </a>
 
-            {{-- KOTAK 3: Kelola Produk (Warna Hijau/Emerald) --}}
-            <a href="{{ route('kasir.products.index') }}" 
-               class="relative overflow-hidden block p-6 rounded-2xl bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 hover:shadow-md hover:border-emerald-200 transition-all duration-300 group">
-                <div class="absolute -top-2 -right-2 p-4 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 group-hover:rotate-12">
-                    <i class="fa-solid fa-box-open text-8xl text-emerald-600"></i>
-                </div>
-                <div class="relative z-10">
-                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-emerald-600 shadow-sm mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-box-open text-xl"></i>
+            {{-- ITEM 3: Laporan --}}
+            <a href="#" class="group flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-chart-simple"></i>
                     </div>
-                    <h4 class="text-lg font-bold text-gray-800">Kelola Produk</h4>
-                    <p class="text-sm text-gray-600 mt-1 leading-relaxed">Tambah, edit, atau hapus menu outlet Anda.</p>
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">Laporan</h4>
+                        <p class="text-xs text-gray-500">Statistik penjualan</p>
+                    </div>
                 </div>
+                <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-gray-500 transition-colors text-sm"></i>
             </a>
 
-            {{-- KOTAK 4: Laporan (Warna Biru Muda/Cyan) --}}
-            <a href="#" 
-               class="relative overflow-hidden block p-6 rounded-2xl bg-cyan-50 border border-cyan-100 hover:bg-cyan-100 hover:shadow-md hover:border-cyan-200 transition-all duration-300 group">
-                <div class="absolute -top-2 -right-2 p-4 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 group-hover:rotate-12">
-                    <i class="fa-solid fa-chart-line text-8xl text-cyan-600"></i>
-                </div>
-                <div class="relative z-10">
-                    <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-cyan-600 shadow-sm mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-chart-line text-xl"></i>
-                    </div>
-                    <h4 class="text-lg font-bold text-gray-800">Laporan</h4>
-                    <p class="text-sm text-gray-600 mt-1 leading-relaxed">Lihat grafik penjualan & performa outlet.</p>
-                </div>
-            </a>
-
-            {{-- KOTAK 5: Logout (Warna Merah) --}}
-            <form action="{{ route('logout') }}" method="POST" class="block h-full">
+            {{-- ITEM 4: Logout --}}
+            <form action="{{ route('logout') }}" method="POST" class="block w-full">
                 @csrf
-                <button type="submit" class="w-full h-full text-left relative overflow-hidden block p-6 rounded-2xl bg-red-50 border border-red-100 hover:bg-red-100 hover:shadow-md hover:border-red-200 transition-all duration-300 group cursor-pointer">
-                    <div class="absolute -top-2 -right-2 p-4 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 group-hover:rotate-12">
-                        <i class="fa-solid fa-right-from-bracket text-8xl text-red-500"></i>
-                    </div>
-                    <div class="relative z-10">
-                        <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-red-500 shadow-sm mb-4 group-hover:scale-110 transition-transform">
-                            <i class="fa-solid fa-right-from-bracket text-xl"></i>
+                <button type="submit" class="w-full group flex items-center justify-between p-4 bg-white rounded-2xl border border-red-100 shadow-sm hover:bg-red-50 hover:border-red-200 transition-all duration-200 text-left">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         </div>
-                        <h4 class="text-lg font-bold text-gray-800">Keluar Aplikasi</h4>
-                        <p class="text-sm text-gray-600 mt-1 leading-relaxed">Akhiri sesi dan kembali ke login.</p>
+                        <div>
+                            <h4 class="font-bold text-red-600 text-sm">Keluar Aplikasi</h4>
+                            <p class="text-xs text-red-400">Akhiri sesi</p>
+                        </div>
                     </div>
+                    <i class="fa-solid fa-chevron-right text-red-200 group-hover:text-red-400 transition-colors text-sm"></i>
                 </button>
             </form>
 
         </div>
     </div>
-
   </div>
 </div>
 @endsection

@@ -36,6 +36,11 @@ Route::middleware(['auth'])->group(function () {
         // Route Cart (Keranjang) - Tambahkan ini jika belum ada
         Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 
+        Route::get('/profile', [UserController::class, 'profile'])->name('profile.index');
+        Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('profile.edit');
+        Route::put('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
+
+
         // Product
         Route::resource('products', ProductController::class);
         Route::resource('users', UserController::class);
