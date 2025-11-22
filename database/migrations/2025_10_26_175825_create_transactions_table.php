@@ -18,7 +18,9 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained('customers')->onDelete('cascade');
             $table->foreignId('payment_method_id')->constrained('payment_methods')->onDelete('cascade');
             $table->string('nomor_invoice')->unique();
-            $table->string('total_harga');
+            $table->decimal('total_harga', 15, 2);
+            $table->decimal('total_bayar', 15, 2);
+            $table->decimal('kembalian', 15, 2);
             $table->timestamps();
         });
     }

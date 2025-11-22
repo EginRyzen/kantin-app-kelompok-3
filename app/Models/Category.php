@@ -15,4 +15,14 @@ class Category extends Model
         'outlet_id',
         'nama_kategori',
     ];
+
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
+    
+    public function outlet()
+    {
+        return $this->belongsTo(Outlet::class);
+    }
 }

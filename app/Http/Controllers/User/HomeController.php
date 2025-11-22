@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\Product; // PENTING: Import Model Product
 use Illuminate\Support\Facades\Auth; // PENTING: Import Auth
@@ -12,22 +13,36 @@ class HomeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // 1. Ambil Outlet ID dari user yang login
         $outletId = Auth::user()->outlet_id;
 
-        // 2. Ambil produk dari database berdasarkan outlet tersebut
-        //    Hanya ambil yang statusnya 'available' (tersedia)
-        $products = Product::where('outlet_id', $outletId)
-                    ->where('status', 'available')
-                    ->latest() // Urutkan dari yang terbaru
-                    ->get();
+        // 1. Ambil parameter dari URL (Search & Filter)
+        $selectedCategoryId = $request->query('category_id');
+        $searchQuery = $request->query('search');
 
-        // 3. Hitung harga akhir (Diskon) agar siap ditampilkan
-        //    Ini sama dengan logika di ProductController
+        // 2. Query Dasar Produk
+        $productQuery = Product::where('outlet_id', $outletId)
+            ->with('category') // Eager load kategori agar lebih efisien
+            ->where('status', 'available') // Tetap filter status available
+            ->latest();
+
+        // 3. Terapkan Filter Kategori (Jika ada)
+        if ($selectedCategoryId) {
+            $productQuery->where('category_id', $selectedCategoryId);
+        }
+
+        // 4. Terapkan Pencarian (Jika ada)
+        if ($searchQuery) {
+            $productQuery->where('nama_produk', 'LIKE', '%' . $searchQuery . '%');
+        }
+
+        // 5. Ambil Data Produk
+        $products = $productQuery->get();
+
+        // 6. Hitung Harga Akhir (Diskon)
         $products->transform(function ($product) {
-            $hargaAsli = $product->harga_jual;
+            $hargaAsli = (float) $product->harga_jual;
             $hargaAkhir = $hargaAsli;
 
             if ($product->diskon_tipe == 'percentage' && $product->diskon_nilai > 0) {
@@ -39,12 +54,22 @@ class HomeController extends Controller
 
             // Pastikan harga tidak negatif
             $product->harga_akhir = max($hargaAkhir, 0);
-            
+
             return $product;
         });
 
-        // 4. Kirim variabel $products ke view menggunakan compact()
-        return view('user.page.home', compact('products'));  
+        // 7. Ambil Data Kategori untuk Tombol Filter
+        $categories = Category::where('outlet_id', $outletId)
+            ->orderBy('nama_kategori', 'asc')
+            ->get();
+
+        // 8. Kirim semua variabel ke view
+        return view('user.page.home', compact(
+            'products',
+            'categories',
+            'selectedCategoryId',
+            'searchQuery'
+        ));
     }
 
     /**

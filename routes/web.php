@@ -34,12 +34,20 @@ Route::controller(AuthController::class)->group(function () {
 Route::middleware(['auth'])->group(function () {
     // Untuk Kasir
     Route::prefix('kasir')->middleware(['role:kasir'])->name('kasir.')->group(function () {
-        
+
         // PERBAIKAN DI SINI: Tambahkan ->name('home')
         Route::get('/home', [HomeController::class, 'index'])->name('home');
 
         // Route Cart (Keranjang) - Tambahkan ini jika belum ada
         Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+        Route::post('/cart/add', [CartController::class, 'addToCart'])->name('cart.add');
+        Route::post('/cart/update', [CartController::class, 'updateCart'])->name('cart.update');
+        Route::post('/cart/remove', [CartController::class, 'removeFromCart'])->name('cart.remove'); // Bisa pakai post/delete
+        Route::post('/cart/clear', [CartController::class, 'clearCart'])->name('cart.clear');
+
+        // Route untuk proses checkout/bayar
+        Route::post('/transaction/process', [App\Http\Controllers\User\TransactionController::class, 'process'])->name('transaction.process');
+        Route::get('/transaction/print/{invoice}', [App\Http\Controllers\User\TransactionController::class, 'printStruk'])->name('transaction.print');
 
         Route::get('/profile', [UserController::class, 'profile'])->name('profile.index');
         Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('profile.edit');

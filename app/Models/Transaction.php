@@ -18,20 +18,36 @@ class Transaction extends Model
         'payment_method_id',
         'nomor_invoice',
         'total_harga',
+        'total_bayar',
+        'kembalian',
     ];
 
-    public function outlet()
+    public function details()
     {
-        return $this->belongsTo(Outlet::class, 'outlet_id');
+        return $this->hasMany(TransactionDetail::class, 'transaction_id');
     }
 
+    // RELASI 2: Transaksi milik satu customer
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    // RELASI 3: Transaksi dibuat oleh satu user (kasir)
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function customer()
+    // RELASI 4: Transaksi menggunakan satu metode pembayaran
+    public function paymentMethod()
     {
-        return $this->belongsTo(Customer::class, 'customer_id');
+        return $this->belongsTo(PaymentMethod::class, 'payment_method_id');
+    }
+    
+    // RELASI 5: Transaksi milik outlet tertentu
+    public function outlet()
+    {
+        return $this->belongsTo(Outlet::class, 'outlet_id');
     }
 }
