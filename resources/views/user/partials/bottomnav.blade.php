@@ -1,4 +1,4 @@
-<div class="fixed z-50 w-full h-20 max-w-2xl -translate-x-1/2 backdrop-blur-2xl bg-white/30 border border-white/20 rounded-full bottom-0 left-1/2">
+<div class="fixed z-45 w-full h-20 max-w-2xl -translate-x-1/2 backdrop-blur-2xl bg-white/30 border border-white/20 rounded-full bottom-0 left-1/2">
   <div class="grid h-full lg:max-w-xl md:max-w-lg grid-cols-5 mx-auto">
     
     {{-- Tombol Home --}}

@@ -25,15 +25,12 @@
     </div>
 
     <form id="product-filter-form" action="{{ route('kasir.products.index') }}" method="GET">
-        
+
         <div class="mb-4 relative">
-            <input id="search-input" 
-                   name="search" 
-                   type="text" 
-                   value="{{ $searchQuery ?? '' }}"
-                   placeholder="Cari produk (misal: Nasi Goreng...)"
-                   class="w-full pl-10 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 transition">
-            
+            <input id="search-input" name="search" type="text" value="{{ $searchQuery ?? '' }}"
+                placeholder="Cari produk (misal: Nasi Goreng...)"
+                class="w-full pl-10 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 transition">
+
             <svg class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg"
                 fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -42,25 +39,23 @@
         </div>
 
         <input type="hidden" id="category-id-input" name="category_id" value="{{ $selectedCategoryId ?? '' }}">
-        
+
         <button type="submit" class="hidden">Filter</button>
     </form>
 
 
     <div class="mb-5">
         <div class="flex space-x-3 overflow-x-auto pb-2" style="scrollbar-width: none; -ms-overflow-style: none;">
-            
-            <a href="#" 
-               onclick="event.preventDefault(); filterCategory('');"
-               class="px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap cursor-pointer
+
+            <a href="#" onclick="event.preventDefault(); filterCategory('');"
+                class="px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap cursor-pointer
                       {{ !$selectedCategoryId ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                 Semua Produk
             </a>
-            
+
             @foreach ($categories as $category)
-                <a href="#" 
-                   onclick="event.preventDefault(); filterCategory('{{ $category->id }}');"
-                   class="px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap cursor-pointer
+                <a href="#" onclick="event.preventDefault(); filterCategory('{{ $category->id }}');"
+                    class="px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap cursor-pointer
                           {{ $selectedCategoryId == $category->id ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
                     {{ $category->nama_kategori }}
                 </a>
@@ -123,13 +118,11 @@
                             </div>
 
                             @if ($product->status == 'available' && $product->stok > 0)
-                                <span
-                                    class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                                     Tersedia
                                 </span>
                             @else
-                                <span
-                                    class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                                     Habis / Belum Ready
                                 </span>
                             @endif
@@ -176,7 +169,7 @@
                 </svg>
                 <h3 class="mt-4 text-xl font-semibold text-gray-800">Tidak Ada Produk</h3>
                 <p class="mt-2 text-gray-500">
-                    @if($searchQuery)
+                    @if ($searchQuery)
                         Tidak ada produk yang cocok dengan pencarian "{{ $searchQuery }}".
                     @elseif($selectedCategoryId)
                         Tidak ada produk di kategori ini.
@@ -186,6 +179,7 @@
                 </p>
             </div>
         @endforelse
+
 
     </div>
 
@@ -231,90 +225,89 @@
 
 
     @push('scripts')
-    
-    <script>
-        // Ambil elemen form dan input
-        const filterForm = document.getElementById('product-filter-form');
-        const searchInput = document.getElementById('search-input');
-        const categoryInput = document.getElementById('category-id-input');
-        let debounceTimer; // Timer untuk debounce
+        <script>
+            // Ambil elemen form dan input
+            const filterForm = document.getElementById('product-filter-form');
+            const searchInput = document.getElementById('search-input');
+            const categoryInput = document.getElementById('category-id-input');
+            let debounceTimer; // Timer untuk debounce
 
-        // 1. Fungsi untuk submit form (dipakai oleh search dan filter)
-        function submitFilterForm() {
-            filterForm.submit();
-        }
-
-        // 2. Fungsi untuk filter kategori (dipanggil oleh link <a>)
-        function filterCategory(categoryId) {
-            // Set nilai hidden input kategori
-            categoryInput.value = categoryId;
-            // Langsung submit form
-            submitFilterForm();
-        }
-
-        // 3. Event listener untuk search input (dengan debounce)
-        // 'input' event lebih responsif daripada 'change'
-        searchInput.addEventListener('input', (e) => {
-            // Hapus timer sebelumnya
-            clearTimeout(debounceTimer);
-            
-            // Set timer baru. Form akan di-submit setelah 500ms tidak mengetik
-            debounceTimer = setTimeout(() => {
-                submitFilterForm();
-            }, 500); // 500ms delay. Anda bisa kecilkan jika mau lebih cepat.
-        });
-    </script>
-    
-    <script>
-        // Ambil elemen DOM statis SATU KALI
-        const modalEl = document.getElementById('delete-product-modal');
-        const modalText = document.getElementById('delete-modal-text');
-        const confirmDeleteButton = document.getElementById('confirm-delete-button');
-        const cancelDeleteButton = document.getElementById('modal-cancel-button');
-        const closeDeleteButton = document.getElementById('modal-close-button');
-
-        // Buat instance modal SATU KALI
-        const deleteModal = new Modal(modalEl);
-
-        // Variabel global untuk menyimpan form yang akan di-submit
-        let formToSubmit = null;
-
-        // Fungsi yang dipanggil oleh tombol "Hapus" di dropdown
-        function showDeleteModal(productId, productName) {
-            // 1. Simpan form yang benar ke variabel global
-            formToSubmit = document.getElementById('delete-form-' + productId);
-
-            // 2. Set teks modal
-            modalText.textContent = 'Anda yakin ingin menghapus produk "' + productName + '"? Tindakan ini tidak dapat dibatalkan.';
-
-            // 3. Tampilkan modal
-            deleteModal.show();
-        }
-
-        // Tambahkan event listener permanen SATU KALI
-
-        // Listener untuk Tombol "Ya, Hapus"
-        confirmDeleteButton.addEventListener('click', () => {
-            if (formToSubmit) { // Cek apakah ada form yang disimpan
-                deleteModal.hide(); 
-                formToSubmit.submit();
-                formToSubmit = null; // Bersihkan variabel setelah submit
+            // 1. Fungsi untuk submit form (dipakai oleh search dan filter)
+            function submitFilterForm() {
+                filterForm.submit();
             }
-        });
 
-        // Listener untuk Tombol "Batal"
-        cancelDeleteButton.addEventListener('click', () => {
-            deleteModal.hide();
-            formToSubmit = null; // Bersihkan variabel
-        });
+            // 2. Fungsi untuk filter kategori (dipanggil oleh link <a>)
+            function filterCategory(categoryId) {
+                // Set nilai hidden input kategori
+                categoryInput.value = categoryId;
+                // Langsung submit form
+                submitFilterForm();
+            }
 
-        // Listener untuk Tombol "X" (Tutup)
-        closeDeleteButton.addEventListener('click', () => {
-            deleteModal.hide();
-            formToSubmit = null; // Bersihkan variabel
-        });
-    </script>
+            // 3. Event listener untuk search input (dengan debounce)
+            // 'input' event lebih responsif daripada 'change'
+            searchInput.addEventListener('input', (e) => {
+                // Hapus timer sebelumnya
+                clearTimeout(debounceTimer);
+
+                // Set timer baru. Form akan di-submit setelah 500ms tidak mengetik
+                debounceTimer = setTimeout(() => {
+                    submitFilterForm();
+                }, 500); // 500ms delay. Anda bisa kecilkan jika mau lebih cepat.
+            });
+        </script>
+
+        <script>
+            // Ambil elemen DOM statis SATU KALI
+            const modalEl = document.getElementById('delete-product-modal');
+            const modalText = document.getElementById('delete-modal-text');
+            const confirmDeleteButton = document.getElementById('confirm-delete-button');
+            const cancelDeleteButton = document.getElementById('modal-cancel-button');
+            const closeDeleteButton = document.getElementById('modal-close-button');
+
+            // Buat instance modal SATU KALI
+            const deleteModal = new Modal(modalEl);
+
+            // Variabel global untuk menyimpan form yang akan di-submit
+            let formToSubmit = null;
+
+            // Fungsi yang dipanggil oleh tombol "Hapus" di dropdown
+            function showDeleteModal(productId, productName) {
+                // 1. Simpan form yang benar ke variabel global
+                formToSubmit = document.getElementById('delete-form-' + productId);
+
+                // 2. Set teks modal
+                modalText.textContent = 'Anda yakin ingin menghapus produk "' + productName +
+                    '"? Tindakan ini tidak dapat dibatalkan.';
+
+                // 3. Tampilkan modal
+                deleteModal.show();
+            }
+
+            // Tambahkan event listener permanen SATU KALI
+
+            // Listener untuk Tombol "Ya, Hapus"
+            confirmDeleteButton.addEventListener('click', () => {
+                if (formToSubmit) { // Cek apakah ada form yang disimpan
+                    deleteModal.hide();
+                    formToSubmit.submit();
+                    formToSubmit = null; // Bersihkan variabel setelah submit
+                }
+            });
+
+            // Listener untuk Tombol "Batal"
+            cancelDeleteButton.addEventListener('click', () => {
+                deleteModal.hide();
+                formToSubmit = null; // Bersihkan variabel
+            });
+
+            // Listener untuk Tombol "X" (Tutup)
+            closeDeleteButton.addEventListener('click', () => {
+                deleteModal.hide();
+                formToSubmit = null; // Bersihkan variabel
+            });
+        </script>
     @endpush
 
 @endsection
-

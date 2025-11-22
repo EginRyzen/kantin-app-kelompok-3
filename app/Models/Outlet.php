@@ -37,4 +37,14 @@ class Outlet extends Model
 
         return $this->hasMany(User::class)->where('role', 'kasir');
     }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
 }

@@ -18,4 +18,15 @@ class TransactionDetail extends Model
         'harga_satuan',
         'subtotal_harga',
     ];
+
+    public function transaction()
+    {
+        return $this->belongsTo(Transaction::class, 'transaction_id');
+    }
+
+    // Relasi ke Produk (PENTING: agar details.product tidak error)
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
 }
