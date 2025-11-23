@@ -31,16 +31,28 @@
       </div>
     </div>
 
-    {{-- Statistik --}}
+    {{-- Statistik (BAGIAN INI YANG DIPERBAIKI) --}}
     <div class="grid grid-cols-2 gap-4">
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
+        
+        {{-- 1. KOTAK PENDAPATAN -> Link ke Detail Pendapatan --}}
+        <a href="{{ route('kasir.profile.income') }}" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center group hover:border-green-200 hover:shadow-md transition-all cursor-pointer">
             <span class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Pendapatan</span>
-            <p class="text-lg font-extrabold text-gray-800">Rp 1.2jt</p> 
-        </div>
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
+            {{-- Pastikan variabel $userIncomeToday dikirim dari UserController --}}
+            <p class="text-lg font-extrabold text-green-600 group-hover:scale-110 transition-transform">
+                Rp {{ number_format($userIncomeToday ?? 0, 0, ',', '.') }}
+            </p> 
+            <span class="text-[10px] text-gray-400 mt-1">Hari Ini &rarr;</span>
+        </a>
+
+        {{-- 2. KOTAK TRANSAKSI -> Link ke Detail Transaksi --}}
+        <a href="{{ route('kasir.profile.transactions') }}" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center group hover:border-blue-200 hover:shadow-md transition-all cursor-pointer">
             <span class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Transaksi</span>
-            <p class="text-lg font-extrabold text-gray-800">142</p>
-        </div>
+            {{-- Pastikan variabel $userTxToday dikirim dari UserController --}}
+            <p class="text-lg font-extrabold text-blue-600 group-hover:scale-110 transition-transform">
+                {{ $userTxToday ?? 0 }}
+            </p>
+            <span class="text-[10px] text-gray-400 mt-1">Hari Ini &rarr;</span>
+        </a>
     </div>
 
     {{-- MENU PINTAS --}}
@@ -48,8 +60,6 @@
         <h3 class="text-lg font-bold text-gray-800 mb-4 px-2">Pengaturan Akun</h3>
         <div class="flex flex-col space-y-3">
             
-            {{-- ITEM 1: Link ke File Baru (profile-edit) --}}
-            {{-- PASTIKAN ROUTE DI WEB.PHP SESUAI YA, misal: kasir.profile.edit --}}
             <a href="{{ route('kasir.profile.edit') }}" 
                class="group flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200">
                 <div class="flex items-center gap-4">
@@ -64,7 +74,6 @@
                 <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-gray-500 transition-colors text-sm"></i>
             </a>
 
-            {{-- ITEM 2: Kelola Produk --}}
             <a href="{{ route('kasir.products.index') }}" class="group flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200">
                 <div class="flex items-center gap-4">
                     <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
@@ -78,21 +87,7 @@
                 <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-gray-500 transition-colors text-sm"></i>
             </a>
 
-            {{-- ITEM 3: Laporan --}}
-            <a href="#" class="group flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                        <i class="fa-solid fa-chart-simple"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-gray-800 text-sm">Laporan</h4>
-                        <p class="text-xs text-gray-500">Statistik penjualan</p>
-                    </div>
-                </div>
-                <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-gray-500 transition-colors text-sm"></i>
-            </a>
-
-            {{-- ITEM 4: Logout --}}
+            {{-- Tombol Logout --}}
             <form action="{{ route('logout') }}" method="POST" class="block w-full">
                 @csrf
                 <button type="submit" class="w-full group flex items-center justify-between p-4 bg-white rounded-2xl border border-red-100 shadow-sm hover:bg-red-50 hover:border-red-200 transition-all duration-200 text-left">
