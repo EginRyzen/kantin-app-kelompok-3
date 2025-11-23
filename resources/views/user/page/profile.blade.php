@@ -44,7 +44,7 @@
             <span class="text-[10px] text-gray-400 mt-1">Hari Ini &rarr;</span>
         </a>
 
-        {{-- 2. KOTAK TRANSAKSI -> Link ke Detail Transaksi --}}
+        {{-- 2. KOTAK TRANSAKSI --}}
         <a href="{{ route('kasir.profile.transactions') }}" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center group hover:border-blue-200 hover:shadow-md transition-all cursor-pointer">
             <span class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Transaksi</span>
             {{-- Pastikan variabel $userTxToday dikirim dari UserController --}}
