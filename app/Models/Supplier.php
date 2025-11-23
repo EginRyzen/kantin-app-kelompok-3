@@ -16,4 +16,9 @@ class Supplier extends Model
         'alamat',
         'no_telp',
     ];
+
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
 }

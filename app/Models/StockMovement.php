@@ -18,4 +18,15 @@ class StockMovement extends Model
         'jumlah',
         'catatan',
     ];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    // Relasi ke User (Siapa yang melakukan input/pengurangan)
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
