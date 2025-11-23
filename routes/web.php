@@ -8,6 +8,7 @@ use App\Http\Controllers\User\CartController; // Pastikan CartController diimpor
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\ProductController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -60,6 +61,19 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('products', ProductController::class);
         Route::resource('users', UserController::class);
     });
+    Route::prefix('admin')->middleware(['role:admin'])->name('admin.')->group(function () {
+    
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::patch('/outlets/{outlet}/toggle-status', [OutletController::class, 'toggleStatus'])->name('outlets.toggleStatus');
+
+    Route::resource('outlets', OutletController::class);
+
+    Route::get('/reports/transactions', [ReportController::class, 'index'])->name('reports.transactions');
+
+    Route::resource('cashiers', AdminUserController::class);
+    });
+});
 
     // Untuk Admin
     Route::prefix('admin')->middleware(['role:admin'])->name('admin.')->group(function () {
