@@ -52,6 +52,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/profile', [UserController::class, 'profile'])->name('profile.index');
         Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('profile.edit');
         Route::put('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
+        Route::get('/profile/income', [UserController::class, 'income'])->name('profile.income');         // Laporan Uang
+        Route::get('/profile/transactions', [UserController::class, 'transactions'])->name('profile.transactions'); // Laporan Barang
 
 
         // Product
