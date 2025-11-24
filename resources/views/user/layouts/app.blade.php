@@ -19,43 +19,33 @@
 
 <body class="bg-white font-sans text-gray-900">
 
-    <!-- 
-        DEFINISI HALAMAN UTAMA (TABS)
-        Halaman-halaman ini akan MENAMPILKAN Navbar & BottomNav.
-        Halaman selain ini akan MENYEMBUNYIKANNYA.
-    -->
     @php
         $mainRoutes = [
-            'kasir.home',            // Beranda
-            'kasir.products.index',  // List Produk
-            'kasir.profile.index',   // Menu Profil Utama
-            'kasir.users.index'      // Jaga-jaga jika pakai route lama
+            'kasir.home',
+            'kasir.products.index',
+            'kasir.profile.index',
+            'kasir.users.index',
+            'kasir.store.report'  
         ];
         
-        // Cek apakah route saat ini termasuk halaman utama
         $isMainPage = request()->routeIs($mainRoutes);
     @endphp
 
     <!-- Wrapper Konten Utama -->
     <div class="max-w-4xl mx-auto bg-white min-h-screen relative shadow-2xl shadow-gray-100">
 
-        {{-- NAVBAR: HANYA TAMPIL DI HALAMAN UTAMA --}}
+        {{-- NAVBAR --}}
         @if ($isMainPage)
             @include('user.partials.navbar')
         @endif
 
-        {{-- 
-           LOGIKA PADDING: 
-           - Halaman Utama: 'pb-24' (memberi ruang untuk BottomNav).
-           - Halaman Detail: 'pb-6' (padding standar).
-        --}}
         <main class="px-4 py-6 min-h-[80vh] {{ $isMainPage ? 'pb-24' : 'pb-6' }}">
             @yield('content')
         </main>
 
     </div> 
 
-    {{-- BOTTOMNAV: HANYA TAMPIL DI HALAMAN UTAMA --}}
+    {{-- BOTTOMNAV --}}
     @if ($isMainPage)
         @include('user.partials.bottomnav')
     @endif

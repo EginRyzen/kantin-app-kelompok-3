@@ -123,6 +123,115 @@ class UserController extends Controller
         return redirect()->route('kasir.profile.index')->with('success', 'Profil berhasil diperbarui!');
     }
 
+    public function storeReport()
+    {
+        $outletId = Auth::user()->outlet_id;
+
+        // 1. Hitung Pendapatan Berbagai Periode
+        $incomeToday = Transaction::where('outlet_id', $outletId)
+            ->whereDate('created_at', Carbon::today())
+            ->sum('total_harga');
+
+        $incomeThisWeek = Transaction::where('outlet_id', $outletId)
+            ->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+            ->sum('total_harga');
+
+        $incomeThisMonth = Transaction::where('outlet_id', $outletId)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->sum('total_harga');
+
+        // 2. Grafik/List Harian (7 Hari Terakhir)
+        // Kita ambil data per tanggal untuk ditampilkan di list
+        $last7Days = Transaction::where('outlet_id', $outletId)
+            ->where('created_at', '>=', Carbon::now()->subDays(6)->startOfDay())
+            ->selectRaw('DATE(created_at) as date, SUM(total_harga) as total, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return view('user.page.store-report', compact(
+            'incomeToday', 
+            'incomeThisWeek', 
+            'incomeThisMonth',
+            'last7Days'
+        ));
+    }
+
+    // A. Detail Hari Ini
+    public function reportToday()
+    {
+        $outletId = Auth::user()->outlet_id;
+        $title = "Laporan Hari Ini";
+        $dateLabel = Carbon::today()->translatedFormat('d F Y');
+
+        $transactions = Transaction::with(['user', 'paymentMethod'])
+            ->where('outlet_id', $outletId)
+            ->whereDate('created_at', Carbon::today())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $totalRevenue = $transactions->sum('total_harga');
+
+        // Kita gunakan view yang sama untuk periode, tapi datanya beda
+        return view('user.page.store-report-period', compact('title', 'dateLabel', 'transactions', 'totalRevenue'));
+    }
+
+    // B. Detail Minggu Ini
+    public function reportWeek()
+    {
+        $outletId = Auth::user()->outlet_id;
+        $title = "Laporan Minggu Ini";
+        $start = Carbon::now()->startOfWeek()->translatedFormat('d M');
+        $end = Carbon::now()->endOfWeek()->translatedFormat('d M Y');
+        $dateLabel = "$start - $end";
+
+        $transactions = Transaction::with(['user', 'paymentMethod'])
+            ->where('outlet_id', $outletId)
+            ->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $totalRevenue = $transactions->sum('total_harga');
+
+        return view('user.page.store-report-period', compact('title', 'dateLabel', 'transactions', 'totalRevenue'));
+    }
+
+    // C. Detail Bulan Ini
+    public function reportMonth()
+    {
+        $outletId = Auth::user()->outlet_id;
+        $title = "Laporan Bulan Ini";
+        $dateLabel = Carbon::now()->translatedFormat('F Y');
+
+        $transactions = Transaction::with(['user', 'paymentMethod'])
+            ->where('outlet_id', $outletId)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $totalRevenue = $transactions->sum('total_harga');
+
+        return view('user.page.store-report-period', compact('title', 'dateLabel', 'transactions', 'totalRevenue'));
+    }
+
+    // D. Detail Performa (Rekap Harian - 30 Hari)
+    public function reportPerformance()
+    {
+        $outletId = Auth::user()->outlet_id;
+        
+        // Ambil data 30 hari terakhir
+        $dailyReports = Transaction::where('outlet_id', $outletId)
+            ->where('created_at', '>=', Carbon::now()->subDays(30)->startOfDay())
+            ->selectRaw('DATE(created_at) as date, SUM(total_harga) as total, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return view('user.page.store-report-performance', compact('dailyReports'));
+    }
+
     // Resource methods (Placeholder)
     public function index() { return view('user.page.profile'); }
     public function create() {}
