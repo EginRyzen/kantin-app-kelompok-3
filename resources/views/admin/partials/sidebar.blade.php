@@ -45,4 +45,20 @@
         <span x-show="isSidebarOpen" class="ml-3">Manajemen Kasir</span>
     </a>
     
+    <div class="border-t border-gray-200 my-4 mx-2"></div>
+
+    <form action="{{ route('logout') }}" method="POST" class="w-full">
+        @csrf <button type="submit" 
+                class="w-full group flex items-center px-2 py-2 text-sm font-medium rounded-md text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-150 ease-in-out"
+                :class="isSidebarOpen ? '' : 'justify-center'"
+                onclick="return confirm('Apakah Anda yakin ingin keluar dari Admin?')">
+            
+            <svg class="mr-3 flex-shrink-0 h-6 w-6 text-red-500 group-hover:text-red-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            
+            <span x-show="isSidebarOpen" class="ml-3">Keluar</span>
+        </button>
+    </form>
+    
 </nav>
