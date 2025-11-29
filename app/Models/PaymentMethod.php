@@ -12,7 +12,13 @@ class PaymentMethod extends Model
     protected $table = 'payment_methods';
 
     protected $fillable = [
+        'outlet_id',
         'nama_metode',
         'is_active',
     ];
+
+    public function outlet()
+    {
+        return $this->belongsTo(Outlet::class);
+    }
 }

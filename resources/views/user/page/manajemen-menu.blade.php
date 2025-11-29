@@ -81,6 +81,23 @@
                 </div>
             </a>
 
+            {{-- 4. MENU PAYMENT METHOD --}}
+            {{-- Link sementara pagar (#) --}}
+            <a href="{{ route('kasir.payment-methods.index') }}" class="group bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-purple-200 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex items-start gap-5">
+                <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl group-hover:bg-purple-600 group-hover:text-white transition-colors duration-300 shrink-0">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-gray-800 group-hover:text-purple-700 transition-colors">Metode Pembayaran</h3>
+                    <p class="text-sm text-gray-500 mt-1 leading-relaxed">
+                        Tunai, QRIS, Transfer, atau E-Wallet.
+                    </p>
+                    <span class="inline-flex items-center gap-1 mt-3 text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
+                        Atur Pembayaran <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </span>
+                </div>
+            </a>
+
         </div>
 
     </div>
