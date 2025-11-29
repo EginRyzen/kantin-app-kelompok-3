@@ -25,7 +25,8 @@
             'kasir.products.index',
             'kasir.profile.index',
             'kasir.users.index',
-            'kasir.store.report'  
+            'kasir.store.report',
+            'kasir.manajemen.index'  
         ];
         
         $isMainPage = request()->routeIs($mainRoutes);
