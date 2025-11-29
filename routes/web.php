@@ -9,6 +9,7 @@ use App\Http\Controllers\User\CartController;
 use App\Http\Controllers\User\CategoryController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\ManajemenController as UserManajemenController;
+use App\Http\Controllers\User\ManajemenUserController;
 use App\Http\Controllers\User\PaymentMethodController;
 use App\Http\Controllers\User\ProductController;
 use App\Http\Controllers\User\SupplierController;
@@ -83,6 +84,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('categories', CategoryController::class);
         Route::resource('suppliers', SupplierController::class);
         Route::resource('payment-methods', PaymentMethodController::class);
+        Route::resource('users-outlets', ManajemenUserController::class);
     });
     // ====================================================
     // GROUP KHUSUS ADMIN

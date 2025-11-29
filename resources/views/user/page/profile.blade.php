@@ -69,6 +69,20 @@
                 <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-gray-400 transition-colors text-xs"></i>
             </a>
 
+            <a href="{{ route('kasir.users-outlets.index') }}" 
+               class="group flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-300">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-sm">Kelola Kasir / User</h4>
+                        <p class="text-xs text-gray-500 mt-0.5">Tambah atau edit akses staff</p>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-300 group-hover:text-gray-400 transition-colors text-xs"></i>
+            </a>
+
             <a href="{{ route('kasir.products.index') }}" class="group flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-300">
                 <div class="flex items-center gap-4">
                     <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">

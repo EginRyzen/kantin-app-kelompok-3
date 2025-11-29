@@ -10,6 +10,7 @@ use App\Models\Transaction;
 use App\Models\TransactionDetail;
 use App\Models\Customer;
 use App\Models\Product;
+use App\Models\StockMovement; // <--- JANGAN LUPA IMPORT INI
 
 class TransactionController extends Controller
 {
@@ -19,7 +20,7 @@ class TransactionController extends Controller
         $request->validate([
             'nama_pelanggan' => 'required|string|max:255',
             'payment_method_id' => 'required|exists:payment_methods,id',
-            'total_bayar' => 'required|numeric|min:0', // VALIDASI BARU
+            'total_bayar' => 'required|numeric|min:0',
         ]);
 
         // 2. Ambil Keranjang
@@ -61,27 +62,46 @@ class TransactionController extends Controller
                 'payment_method_id' => $request->payment_method_id,
                 'nomor_invoice' => 'INV-' . time() . rand(100, 999),
                 'total_harga' => $totalHarga,
-                'total_bayar' => $request->total_bayar, // SIMPAN INI
-                'kembalian' => $kembalian,              // SIMPAN INI
+                'total_bayar' => $request->total_bayar,
+                'kembalian' => $kembalian,
             ]);
 
-            // 8. Simpan Detail & Kurangi Stok (Sama seperti sebelumnya)
+            // 8. Simpan Detail & Update Stok & Catat Movement
             foreach ($cart as $id => $details) {
+                // Lock for Update untuk mencegah race condition saat transaksi bersamaan
                 $product = Product::lockForUpdate()->find($id);
 
-                if ($product->stok < $details['qty']) {
-                    DB::rollBack();
-                    return response()->json(['status' => 'error', 'message' => 'Stok ' . $product->nama_produk . ' habis!']);
+                // --- LOGIC PERBAIKAN STOK UNLIMITED ---
+                // Hanya cek dan kurangi stok JIKA stok TIDAK NULL
+                if (!is_null($product->stok)) {
+                    // Cek ketersediaan
+                    if ($product->stok < $details['qty']) {
+                        DB::rollBack();
+                        return response()->json(['status' => 'error', 'message' => 'Stok ' . $product->nama_produk . ' tidak mencukupi!']);
+                    }
+                    // Kurangi stok
+                    $product->decrement('stok', $details['qty']);
                 }
+                // Jika NULL (Unlimited), lewati pengecekan dan pengurangan
+                // ---------------------------------------
 
-                $product->decrement('stok', $details['qty']);
-
+                // Simpan Detail Transaksi
                 TransactionDetail::create([
                     'transaction_id' => $transaction->id,
                     'product_id' => $id,
                     'quantity' => $details['qty'],
                     'harga_satuan' => $details['price'],
                     'subtotal_harga' => $details['price'] * $details['qty'],
+                ]);
+
+                // --- LOGIC BARU: CATAT STOCK MOVEMENT ---
+                // Kita tetap mencatat penjualan di history meskipun barangnya unlimited
+                StockMovement::create([
+                    'product_id' => $id,
+                    'user_id' => Auth::id(), // Kasir yang memproses
+                    'tipe_gerakan' => 'penjualan',
+                    'jumlah' => $details['qty'], // Jumlah keluar
+                    'catatan' => 'Transaksi Penjualan #' . $transaction->nomor_invoice,
                 ]);
             }
 
@@ -92,8 +112,9 @@ class TransactionController extends Controller
                 'status' => 'success',
                 'message' => 'Transaksi Berhasil!',
                 'invoice' => $transaction->nomor_invoice,
-                'kembalian' => $kembalian // Kirim info kembalian ke frontend
+                'kembalian' => $kembalian
             ]);
+
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['status' => 'error', 'message' => 'Error: ' . $e->getMessage()]);

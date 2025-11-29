@@ -17,14 +17,16 @@ class UserController extends Controller
     // ==========================================
     public function profile()
     {
-        $userId = Auth::id();
+        // PERBAIKAN: Gunakan outlet_id agar data satu toko tampil semua
+        // Jika pakai user_id, cuma tampil data diri sendiri
+        $outletId = Auth::user()->outlet_id;
 
-        // Ringkasan Singkat untuk Dashboard
-        $userIncomeToday = Transaction::where('user_id', $userId)
+        // Ringkasan Singkat untuk Dashboard (PER OUTLET)
+        $userIncomeToday = Transaction::where('outlet_id', $outletId) // Ganti user_id jadi outlet_id
             ->whereDate('created_at', Carbon::today())
             ->sum('total_harga');
 
-        $userTxToday = Transaction::where('user_id', $userId)
+        $userTxToday = Transaction::where('outlet_id', $outletId) // Ganti user_id jadi outlet_id
             ->whereDate('created_at', Carbon::today())
             ->count();
 
@@ -36,15 +38,16 @@ class UserController extends Controller
     // ==========================================
     public function income()
     {
-        $userId = Auth::id();
+        // PERBAIKAN: Gunakan outlet_id
+        $outletId = Auth::user()->outlet_id;
 
-        // A. Total Uang Hari Ini
-        $todayRevenue = Transaction::where('user_id', $userId)
+        // A. Total Uang Hari Ini (PER OUTLET)
+        $todayRevenue = Transaction::where('outlet_id', $outletId)
             ->whereDate('created_at', Carbon::today())
             ->sum('total_harga');
 
-        // B. Rekapan Bulanan (Fokus ke Uang)
-        $monthlyRecap = Transaction::where('user_id', $userId)
+        // B. Rekapan Bulanan (Fokus ke Uang, PER OUTLET)
+        $monthlyRecap = Transaction::where('outlet_id', $outletId)
             ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month_year, SUM(total_harga) as total_revenue')
             ->groupBy('month_year')
             ->orderBy('month_year', 'desc')
@@ -64,11 +67,12 @@ class UserController extends Controller
     // ==========================================
     public function transactions()
     {
-        $userId = Auth::id();
+        // PERBAIKAN: Gunakan outlet_id
+        $outletId = Auth::user()->outlet_id;
 
-        // Ambil transaksi HARI INI beserta detail barangnya
-        $todaysTransactions = Transaction::with('details.product') // Eager load detail & produk
-            ->where('user_id', $userId)
+        // Ambil transaksi HARI INI beserta detail barangnya (PER OUTLET)
+        $todaysTransactions = Transaction::with(['details.product', 'user']) // Eager load user juga
+            ->where('outlet_id', $outletId)
             ->whereDate('created_at', Carbon::today())
             ->orderBy('created_at', 'desc')
             ->get();
@@ -116,45 +120,63 @@ class UserController extends Controller
 
         $user->nama_lengkap = $request->nama_lengkap;
         $user->email        = $request->email;
-        $user->no_hp        = $request->no_hp; 
-        
+        $user->no_hp        = $request->no_hp;
+
         $user->save();
 
         return redirect()->route('kasir.profile.index')->with('success', 'Profil berhasil diperbarui!');
     }
 
-    public function storeReport()
+    public function storeReport(Request $request)
     {
         $outletId = Auth::user()->outlet_id;
 
-        // 1. Hitung Pendapatan Berbagai Periode
+        // 1. Tangkap Filter Bulan (Format: YYYY-MM)
+        // Jika tidak ada filter, gunakan bulan saat ini
+        $filterDate = $request->input('filter_month')
+            ? Carbon::parse($request->input('filter_month'))
+            : Carbon::now();
+
+        // TAMBAHAN FIX: Pastikan variabel ini ada untuk view
+        $isCurrentMonth = $filterDate->isCurrentMonth(); 
+
+        $currentMonthName = $filterDate->translatedFormat('F Y');
+
+        // 2. Hitung Pendapatan (Tetap Realtime untuk Hari & Minggu, tapi Bulan ikuti filter)
+
+        // a. Hari Ini (Tetap Realtime)
         $incomeToday = Transaction::where('outlet_id', $outletId)
             ->whereDate('created_at', Carbon::today())
             ->sum('total_harga');
 
+        // b. Minggu Ini (Tetap Realtime)
         $incomeThisWeek = Transaction::where('outlet_id', $outletId)
             ->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
             ->sum('total_harga');
 
-        $incomeThisMonth = Transaction::where('outlet_id', $outletId)
-            ->whereMonth('created_at', Carbon::now()->month)
-            ->whereYear('created_at', Carbon::now()->year)
+        // c. Bulan Terpilih (Sesuai Filter)
+        $incomeSelectedMonth = Transaction::where('outlet_id', $outletId)
+            ->whereMonth('created_at', $filterDate->month)
+            ->whereYear('created_at', $filterDate->year)
             ->sum('total_harga');
 
-        // 2. Grafik/List Harian (7 Hari Terakhir)
-        // Kita ambil data per tanggal untuk ditampilkan di list
-        $last7Days = Transaction::where('outlet_id', $outletId)
-            ->where('created_at', '>=', Carbon::now()->subDays(6)->startOfDay())
+        // 3. List Harian (Menampilkan data harian PADA BULAN TERPILIH)
+        $dailyReports = Transaction::where('outlet_id', $outletId)
+            ->whereMonth('created_at', $filterDate->month)
+            ->whereYear('created_at', $filterDate->year)
             ->selectRaw('DATE(created_at) as date, SUM(total_harga) as total, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('date', 'desc')
             ->get();
 
         return view('user.page.store-report', compact(
-            'incomeToday', 
-            'incomeThisWeek', 
-            'incomeThisMonth',
-            'last7Days'
+            'incomeToday',
+            'incomeThisWeek',
+            'incomeSelectedMonth', 
+            'dailyReports',
+            'filterDate',
+            'currentMonthName',
+            'isCurrentMonth'
         ));
     }
 
@@ -220,7 +242,7 @@ class UserController extends Controller
     public function reportPerformance()
     {
         $outletId = Auth::user()->outlet_id;
-        
+
         // Ambil data 30 hari terakhir
         $dailyReports = Transaction::where('outlet_id', $outletId)
             ->where('created_at', '>=', Carbon::now()->subDays(30)->startOfDay())
@@ -233,7 +255,12 @@ class UserController extends Controller
     }
 
     // Resource methods (Placeholder)
-    public function index() { return view('user.page.profile'); }
+    public function index()
+    {
+        return view('user.page.profile');
+    }
+
+    // Resource methods (Placeholder)
     public function create() {}
     public function store(Request $request) {}
     public function show(string $id) {}

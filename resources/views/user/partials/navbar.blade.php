@@ -28,7 +28,7 @@
                 </a>
 
                 {{-- Avatar User (Opsional) --}}
-                <a href="{{ route('kasir.users.index') }}" class="hidden md:block">
+                <a href="{{ route('kasir.profile.index') }}" class="hidden md:block">
                     <img src="https://ui-avatars.com/api/?name={{ Auth::user()->nama_lengkap }}&background=random" 
                          alt="User" class="w-9 h-9 rounded-full border border-gray-200 shadow-sm">
                 </a>
