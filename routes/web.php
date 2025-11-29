@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\User\CartController;
+use App\Http\Controllers\User\CategoryController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\ManajemenController as UserManajemenController;
 use App\Http\Controllers\User\ProductController;
@@ -77,6 +78,7 @@ Route::middleware(['auth'])->group(function () {
 
         // 7. Manajemen (Hanya untuk Kasir dengan Role Manajemen)
         Route::get('/manajemen', [UserManajemenController::class, 'index'])->name('manajemen.index');
+        Route::resource('categories', CategoryController::class);
     });
     // ====================================================
     // GROUP KHUSUS ADMIN

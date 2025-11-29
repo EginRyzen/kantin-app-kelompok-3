@@ -43,7 +43,7 @@
 
             {{-- 2. MENU KATEGORI --}}
             {{-- Link sementara pagar (#) --}}
-            <a href="#" class="group bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex items-start gap-5">
+            <a href="{{ route('kasir.categories.index') }}" class="group bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex items-start gap-5">
                 {{-- Ikon --}}
                 <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shrink-0">
                     <i class="fa-solid fa-layer-group"></i>
