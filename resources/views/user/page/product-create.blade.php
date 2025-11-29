@@ -106,7 +106,16 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-5">
+        {{-- Field Catatan Stok --}}
+        <div id="catatan-field" class="hidden bg-blue-50 p-4 rounded-lg border border-blue-100 transition-all duration-300">
+            <label for="catatan_stok" class="block mb-2 text-sm font-bold text-blue-700">Catatan Stok / No. Nota Supplier</label>
+            <input type="text" id="catatan_stok" name="catatan_stok" value="{{ old('catatan_stok') }}"
+                class="bg-white border border-blue-200 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+                placeholder="Contoh: Restock Faktur #INV-001">
+            <p class="text-xs text-blue-600 mt-1">*Keterangan ini akan disimpan di riwayat stok.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
                 <label for="harga_jual" class="block mb-2 text-sm font-medium text-gray-700">Harga Jual <span class="text-red-500">*</span></label>
                 <div class="relative">
@@ -119,11 +128,36 @@
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
+
+            <div id="restock-container" class="hidden">
+                <label for="restock_qty" class="block mb-2 text-sm font-medium text-blue-700">
+                    Jumlah Stok Masuk
+                </label>
+                <input type="number" id="restock_qty" name="restock_qty" value="{{ old('restock_qty') }}"
+                    class="bg-blue-50 border border-blue-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+                    placeholder="0">
+                <p class="text-xs text-gray-500 mt-1">Stok awal dari supplier.</p>
+            </div>
+
             <div>
-                <label for="stok" class="block mb-2 text-sm font-medium text-gray-700">Stok Awal <span class="text-red-500">*</span></label>
+                <div class="flex justify-between items-center mb-2">
+                    <label for="stok" class="block text-sm font-medium text-gray-700">
+                        Stok Awal <span id="stok-asterisk" class="text-red-500">*</span>
+                    </label>
+                    <div class="flex items-center">
+                        <input id="is_unlimited" name="is_unlimited" type="checkbox" value="1" 
+                            {{ old('is_unlimited') ? 'checked' : '' }}
+                            class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer">
+                        <label for="is_unlimited" class="ml-2 text-xs font-medium text-gray-900 cursor-pointer select-none">
+                            Stok Unlimited
+                        </label>
+                    </div>
+                </div>
+                
                 <input type="number" id="stok" name="stok" value="{{ old('stok', 0) }}"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-3"
-                    placeholder="0" required>
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-3 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                    placeholder="0">
+                
                 @error('stok')
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -133,7 +167,7 @@
         <div class="grid grid-cols-2 gap-5">
             <div>
                 <label for="diskon_tipe" class="block mb-2 text-sm font-medium text-gray-700">Tipe Diskon</label>
-                <select id="diskon_tipe" name="diskon_tipe"
+                <select id="diskon_tipe" name="diskon_tipe" onchange="handleDiscountChange()"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-3">
                     <option value="" {{ old('diskon_tipe') == '' ? 'selected' : '' }}>Tidak ada diskon</option>
                     <option value="percentage" {{ old('diskon_tipe') == 'percentage' ? 'selected' : '' }}>Persentase (%)</option>
@@ -146,7 +180,7 @@
             <div>
                 <label for="diskon_nilai" class="block mb-2 text-sm font-medium text-gray-700">Nilai Diskon</label>
                 <input type="number" id="diskon_nilai" name="diskon_nilai" value="{{ old('diskon_nilai', 0) }}"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-3"
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-3 disabled:bg-gray-200 disabled:cursor-not-allowed transition-colors"
                     placeholder="0">
                 @error('diskon_nilai')
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -154,7 +188,6 @@
             </div>
         </div>
         
-        <!-- Status Produk -->
         <div>
             <label for="status" class="block mb-2 text-sm font-medium text-gray-700">Status Awal</label>
             <select id="status" name="status"
@@ -167,7 +200,6 @@
             @enderror
         </div>
 
-        <!-- Tombol Simpan -->
         <button type="submit"
             class="w-full text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-3.5 text-center transition-all duration-200">
             Simpan Produk
@@ -176,25 +208,117 @@
     </form>
 
     <script>
-        // Ambil elemen-elemen yang dibutuhkan
-        const imageInput = document.getElementById('image');
-        const imagePlaceholder = document.getElementById('image-placeholder');
-        const imagePreview = document.getElementById('image-preview');
+    // 1. Logic Preview Image
+    const imageInput = document.getElementById('image');
+    const imagePlaceholder = document.getElementById('image-placeholder');
+    const imagePreview = document.getElementById('image-preview');
 
+    if(imageInput) {
         imageInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
-
                 reader.onload = function(e) {
                     imagePreview.src = e.target.result;
                     imagePreview.classList.remove('hidden');
                     imagePlaceholder.classList.add('hidden');
                 };
-
                 reader.readAsDataURL(file);
             }
         });
-    </script>
-@endsection
+    }
 
+    // 2. Logic UTAMA: Supplier & Stok
+    const supplierSelect = document.getElementById('supplier_id');
+    const restockContainer = document.getElementById('restock-container');
+    const restockInput = document.getElementById('restock_qty');
+    const stockInput = document.getElementById('stok');
+    const unlimitedCheckbox = document.getElementById('is_unlimited');
+    const catatanField = document.getElementById('catatan-field');
+
+    function updateStockLogic() {
+        const hasSupplier = supplierSelect.value !== "";
+
+        if (hasSupplier) {
+            // --- MODE SUPPLIER ---
+            // 1. Tampilkan Field Stok Masuk & Catatan
+            restockContainer.classList.remove('hidden');
+            catatanField.classList.remove('hidden');
+
+            // 2. Matikan Checkbox Unlimited (Harus ada stok)
+            unlimitedCheckbox.checked = false;
+            unlimitedCheckbox.disabled = true;
+            unlimitedCheckbox.parentElement.classList.add('opacity-50');
+
+            // 3. Stok Utama menjadi Readonly & Mirroring nilai
+            stockInput.setAttribute('readonly', true);
+            stockInput.classList.add('bg-gray-100');
+            stockInput.value = restockInput.value || 0;
+
+        } else {
+            // --- MODE MANUAL ---
+            // 1. Sembunyikan Field Stok Masuk & Catatan
+            restockContainer.classList.add('hidden');
+            catatanField.classList.add('hidden');
+            restockInput.value = ''; // Reset
+
+            // 2. Hidupkan Checkbox Unlimited
+            unlimitedCheckbox.disabled = false;
+            unlimitedCheckbox.parentElement.classList.remove('opacity-50');
+
+            // 3. Stok Utama bisa diedit
+            stockInput.removeAttribute('readonly');
+            stockInput.classList.remove('bg-gray-100');
+            
+            // Kembalikan ke 0 jika kosong saat mode manual
+            if(!unlimitedCheckbox.checked && stockInput.value === "") {
+                stockInput.value = 0;
+            }
+        }
+        
+        // Panggil logic standar untuk handle visual unlimited (abu-abu jika checked)
+        handleUnlimitedCheck();
+    }
+
+    function handleUnlimitedCheck() {
+        // Hanya proses jika checkbox AKTIF (tidak disabled)
+        if (!unlimitedCheckbox.disabled) {
+            if (unlimitedCheckbox.checked) {
+                stockInput.disabled = true;
+                stockInput.placeholder = "∞ (Unlimited)";
+                stockInput.value = "";
+                stockInput.classList.add('bg-gray-200');
+            } else {
+                stockInput.disabled = false;
+                stockInput.placeholder = "0";
+                stockInput.classList.remove('bg-gray-200');
+            }
+        }
+    }
+
+    // 3. Logic Diskon
+    function handleDiscountChange() {
+        const typeSelect = document.getElementById('diskon_tipe');
+        const valueInput = document.getElementById('diskon_nilai');
+
+        if (typeSelect.value === "") {
+            valueInput.disabled = true;
+            valueInput.classList.add('bg-gray-200');
+        } else {
+            valueInput.disabled = false;
+            valueInput.classList.remove('bg-gray-200');
+        }
+    }
+
+    // 4. Inisialisasi
+    document.addEventListener('DOMContentLoaded', function() {
+        handleDiscountChange();
+        updateStockLogic(); 
+
+        // Listener
+        supplierSelect.addEventListener('change', updateStockLogic);
+        restockInput.addEventListener('input', updateStockLogic); // Mirroring realtime
+        unlimitedCheckbox.addEventListener('change', handleUnlimitedCheck);
+    });
+</script>
+@endsection

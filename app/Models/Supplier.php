@@ -12,10 +12,16 @@ class Supplier extends Model
     protected $table = 'suppliers';
 
     protected $fillable = [
+        'outlet_id',
         'nama_supplier',
         'alamat',
         'no_telp',
     ];
+
+    public function outlet()
+    {
+        return $this->belongsTo(Outlet::class);
+    }
 
     public function products()
     {

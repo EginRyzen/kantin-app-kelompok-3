@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('payment_methods', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('outlet_id')
+                  ->constrained('outlets')
+                  ->onDelete('cascade'); 
             $table->string('nama_metode')->unique();
             $table->boolean('is_active')->default(false);
             $table->timestamps();

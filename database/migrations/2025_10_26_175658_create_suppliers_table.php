@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('suppliers', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_supplier')->unique();
+            $table->foreignId('outlet_id')
+                  ->constrained('outlets')
+                  ->onDelete('cascade'); 
+            $table->string('nama_supplier');
             $table->string('alamat')->nullable();
             $table->string('no_telp', 15);
             $table->timestamps();

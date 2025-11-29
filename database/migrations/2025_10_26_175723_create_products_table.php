@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('nama_produk');
             $table->text('deskripsi')->nullable();
             $table->decimal('harga_jual', 15, 2)->default(0);
-            $table->integer('stok')->default(0);
+            $table->integer('stok')->default(0)->nullable();
             $table->enum('diskon_tipe', ['percentage', 'fixed'])->nullable();
             $table->decimal('diskon_nilai', 15, 2)->nullable();
             $table->enum('status', ['available', 'unavailable'])->default('available');
