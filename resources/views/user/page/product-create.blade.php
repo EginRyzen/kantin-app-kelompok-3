@@ -91,7 +91,7 @@
             </div>
             <div>
                 <label for="supplier_id" class="block mb-2 text-sm font-medium text-gray-700">Supplier</label>
-                <select id="supplier_id" name="supplier_id" onchange="handleSupplierChange()"
+                <select id="supplier_id" name="supplier_id"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-3">
                     <option value="" selected>Pilih supplier (Opsional)</option>
                     @foreach ($suppliers as $supplier)
@@ -106,7 +106,7 @@
             </div>
         </div>
 
-        {{-- FIELD BARU: Catatan Stok (Muncul jika supplier dipilih) --}}
+        {{-- Field Catatan Stok --}}
         <div id="catatan-field" class="hidden bg-blue-50 p-4 rounded-lg border border-blue-100 transition-all duration-300">
             <label for="catatan_stok" class="block mb-2 text-sm font-bold text-blue-700">Catatan Stok / No. Nota Supplier</label>
             <input type="text" id="catatan_stok" name="catatan_stok" value="{{ old('catatan_stok') }}"
@@ -115,7 +115,7 @@
             <p class="text-xs text-blue-600 mt-1">*Keterangan ini akan disimpan di riwayat stok.</p>
         </div>
 
-        <div class="grid grid-cols-2 gap-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
                 <label for="harga_jual" class="block mb-2 text-sm font-medium text-gray-700">Harga Jual <span class="text-red-500">*</span></label>
                 <div class="relative">
@@ -128,6 +128,17 @@
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
+
+            <div id="restock-container" class="hidden">
+                <label for="restock_qty" class="block mb-2 text-sm font-medium text-blue-700">
+                    Jumlah Stok Masuk
+                </label>
+                <input type="number" id="restock_qty" name="restock_qty" value="{{ old('restock_qty') }}"
+                    class="bg-blue-50 border border-blue-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+                    placeholder="0">
+                <p class="text-xs text-gray-500 mt-1">Stok awal dari supplier.</p>
+            </div>
+
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <label for="stok" class="block text-sm font-medium text-gray-700">
@@ -136,7 +147,6 @@
                     <div class="flex items-center">
                         <input id="is_unlimited" name="is_unlimited" type="checkbox" value="1" 
                             {{ old('is_unlimited') ? 'checked' : '' }}
-                            onchange="toggleStokInput()"
                             class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer">
                         <label for="is_unlimited" class="ml-2 text-xs font-medium text-gray-900 cursor-pointer select-none">
                             Stok Unlimited
@@ -178,7 +188,6 @@
             </div>
         </div>
         
-        <!-- Status Produk -->
         <div>
             <label for="status" class="block mb-2 text-sm font-medium text-gray-700">Status Awal</label>
             <select id="status" name="status"
@@ -191,7 +200,6 @@
             @enderror
         </div>
 
-        <!-- Tombol Simpan -->
         <button type="submit"
             class="w-full text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-3.5 text-center transition-all duration-200">
             Simpan Produk
@@ -205,74 +213,96 @@
     const imagePlaceholder = document.getElementById('image-placeholder');
     const imagePreview = document.getElementById('image-preview');
 
-    imageInput.addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                imagePreview.src = e.target.result;
-                imagePreview.classList.remove('hidden');
-                imagePlaceholder.classList.add('hidden');
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    // 2. Logic Stok Unlimited
-    function toggleStokInput() {
-        const checkbox = document.getElementById('is_unlimited');
-        const stokInput = document.getElementById('stok');
-        const stokAsterisk = document.getElementById('stok-asterisk');
-
-        // Jika checkbox disabled (karena supplier dipilih), kita anggap tidak checked
-        if (checkbox.checked && !checkbox.disabled) {
-            stokInput.disabled = true;
-            stokInput.value = '';
-            stokInput.required = false;
-            stokInput.classList.add('bg-gray-200');
-            if(stokAsterisk) stokAsterisk.classList.add('hidden');
-        } else {
-            stokInput.disabled = false;
-            stokInput.required = true;
-            stokInput.classList.remove('bg-gray-200');
-            if(stokAsterisk) stokAsterisk.classList.remove('hidden');
-        }
+    if(imageInput) {
+        imageInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    imagePlaceholder.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
     }
 
-    // 3. Logic Supplier Change (Menggabungkan toggle catatan & disable unlimited)
-    function handleSupplierChange() {
-        const supplierSelect = document.getElementById('supplier_id');
-        const catatanField = document.getElementById('catatan-field');
-        const unlimitedCheckbox = document.getElementById('is_unlimited');
+    // 2. Logic UTAMA: Supplier & Stok
+    const supplierSelect = document.getElementById('supplier_id');
+    const restockContainer = document.getElementById('restock-container');
+    const restockInput = document.getElementById('restock_qty');
+    const stockInput = document.getElementById('stok');
+    const unlimitedCheckbox = document.getElementById('is_unlimited');
+    const catatanField = document.getElementById('catatan-field');
 
-        // A. Toggle Catatan
-        if (supplierSelect.value !== "") {
+    function updateStockLogic() {
+        const hasSupplier = supplierSelect.value !== "";
+
+        if (hasSupplier) {
+            // --- MODE SUPPLIER ---
+            // 1. Tampilkan Field Stok Masuk & Catatan
+            restockContainer.classList.remove('hidden');
             catatanField.classList.remove('hidden');
-            
-            // B. Disable Unlimited jika ada supplier
-            unlimitedCheckbox.checked = false; // Uncheck paksa
-            unlimitedCheckbox.disabled = true; // Disable checkbox
-            unlimitedCheckbox.parentElement.classList.add('opacity-50'); // Visual cue
+
+            // 2. Matikan Checkbox Unlimited (Harus ada stok)
+            unlimitedCheckbox.checked = false;
+            unlimitedCheckbox.disabled = true;
+            unlimitedCheckbox.parentElement.classList.add('opacity-50');
+
+            // 3. Stok Utama menjadi Readonly & Mirroring nilai
+            stockInput.setAttribute('readonly', true);
+            stockInput.classList.add('bg-gray-100');
+            stockInput.value = restockInput.value || 0;
+
         } else {
+            // --- MODE MANUAL ---
+            // 1. Sembunyikan Field Stok Masuk & Catatan
+            restockContainer.classList.add('hidden');
             catatanField.classList.add('hidden');
-            
-            // B. Enable Unlimited jika tidak ada supplier
+            restockInput.value = ''; // Reset
+
+            // 2. Hidupkan Checkbox Unlimited
             unlimitedCheckbox.disabled = false;
             unlimitedCheckbox.parentElement.classList.remove('opacity-50');
-        }
 
-        // Panggil toggleStokInput untuk mereset state input stok (karena unlimited jadi unchecked)
-        toggleStokInput();
+            // 3. Stok Utama bisa diedit
+            stockInput.removeAttribute('readonly');
+            stockInput.classList.remove('bg-gray-100');
+            
+            // Kembalikan ke 0 jika kosong saat mode manual
+            if(!unlimitedCheckbox.checked && stockInput.value === "") {
+                stockInput.value = 0;
+            }
+        }
+        
+        // Panggil logic standar untuk handle visual unlimited (abu-abu jika checked)
+        handleUnlimitedCheck();
     }
 
-    // 4. Logic Diskon
+    function handleUnlimitedCheck() {
+        // Hanya proses jika checkbox AKTIF (tidak disabled)
+        if (!unlimitedCheckbox.disabled) {
+            if (unlimitedCheckbox.checked) {
+                stockInput.disabled = true;
+                stockInput.placeholder = "∞ (Unlimited)";
+                stockInput.value = "";
+                stockInput.classList.add('bg-gray-200');
+            } else {
+                stockInput.disabled = false;
+                stockInput.placeholder = "0";
+                stockInput.classList.remove('bg-gray-200');
+            }
+        }
+    }
+
+    // 3. Logic Diskon
     function handleDiscountChange() {
         const typeSelect = document.getElementById('diskon_tipe');
         const valueInput = document.getElementById('diskon_nilai');
 
         if (typeSelect.value === "") {
             valueInput.disabled = true;
-            valueInput.value = 0; // Reset ke 0 biar aman
             valueInput.classList.add('bg-gray-200');
         } else {
             valueInput.disabled = false;
@@ -280,13 +310,15 @@
         }
     }
 
-    // 5. Inisialisasi saat load
+    // 4. Inisialisasi
     document.addEventListener('DOMContentLoaded', function() {
-        // Jalankan semua logic untuk handle old input saat validasi error
-        handleSupplierChange(); 
         handleDiscountChange();
-        // toggleStokInput sudah dipanggil di dalam handleSupplierChange, tapi aman dipanggil lagi
-        // toggleStokInput(); 
+        updateStockLogic(); 
+
+        // Listener
+        supplierSelect.addEventListener('change', updateStockLogic);
+        restockInput.addEventListener('input', updateStockLogic); // Mirroring realtime
+        unlimitedCheckbox.addEventListener('change', handleUnlimitedCheck);
     });
 </script>
 @endsection

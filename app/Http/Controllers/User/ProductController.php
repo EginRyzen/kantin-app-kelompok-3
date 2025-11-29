@@ -58,9 +58,9 @@ class ProductController extends Controller
             ->get();
 
         return view('user.page.product', compact(
-            'products', 
-            'categories', 
-            'selectedCategoryId', 
+            'products',
+            'categories',
+            'selectedCategoryId',
             'searchQuery'
         ));
     }
@@ -68,9 +68,9 @@ class ProductController extends Controller
     public function create()
     {
         $outletId = Auth::user()->outlet_id;
-        
+
         $categories = Category::where('outlet_id', $outletId)->orderBy('nama_kategori', 'asc')->get();
-        
+
         // Filter supplier berdasarkan outlet
         $suppliers = Supplier::where('outlet_id', $outletId)->orderBy('nama_supplier', 'asc')->get();
 
@@ -88,7 +88,10 @@ class ProductController extends Controller
             'kode_produk' => 'nullable|string|max:100',
             'deskripsi' => 'nullable|string',
             'harga_jual' => 'required|numeric|min:0',
-            // Stok wajib diisi KECUALI checkbox unlimited dicentang
+
+            // Validasi field bantuan (hanya dipakai jika supplier dipilih)
+            'restock_qty' => 'nullable|integer|min:0',
+
             'stok' => 'required_without:is_unlimited|nullable|integer|min:0',
             'diskon_tipe' => 'nullable|in:percentage,fixed',
             'diskon_nilai' => 'nullable|numeric|min:0|required_with:diskon_tipe',
@@ -101,25 +104,44 @@ class ProductController extends Controller
             $validatedData['stok'] = null; // Set null untuk unlimited
         }
 
+        // LOGIKA KHUSUS: Jika via Supplier, pakai nilai restock_qty sebagai stok awal
+        // Ini untuk memastikan data konsisten walaupun field stok di-disable/readonly di frontend
+        if ($request->filled('supplier_id') && $request->filled('restock_qty')) {
+            $validatedData['stok'] = (int) $request->restock_qty;
+        }
+
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('products', 'public');
             $validatedData['image'] = $path;
         }
+
+        // Bersihkan field bantuan sebelum create
+        unset($validatedData['restock_qty']);
+        unset($validatedData['catatan_stok']); // Catatan disimpan terpisah di StockMovement
 
         DB::beginTransaction();
         try {
             // 1. Buat Produk
             $product = Product::create($validatedData);
 
-            // 2. Catat Stock Movement (Hanya jika stok tidak null/unlimited dan > 0)
-            // Jika unlimited, kita catat sebagai info saja dengan jumlah 0
+            // 2. Catat Stock Movement
             $jumlahMove = $product->stok ?? 0;
-            $catatan = $request->catatan_stok ?? 'Stok Awal Produk Baru';
-            
+            $catatan = $request->catatan_stok;
+
+            // Set catatan default jika kosong
+            if (empty($catatan)) {
+                if ($request->filled('supplier_id')) {
+                    $catatan = 'Stok Awal dari Supplier';
+                } else {
+                    $catatan = 'Stok Awal Produk Baru';
+                }
+            }
+
             if ($request->has('is_unlimited')) {
                 $catatan .= ' (Status: Unlimited)';
             }
 
+            // Simpan log jika ada stok atau status unlimited
             if ($jumlahMove > 0 || $request->has('is_unlimited')) {
                 StockMovement::create([
                     'product_id' => $product->id,
@@ -133,7 +155,6 @@ class ProductController extends Controller
             DB::commit();
             return redirect()->route('kasir.products.index')
                 ->with('success', 'Produk baru berhasil ditambahkan!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->with('error', 'Gagal menyimpan produk: ' . $e->getMessage());
@@ -149,9 +170,9 @@ class ProductController extends Controller
         }
 
         $outletId = Auth::user()->outlet_id;
-        
+
         $categories = Category::where('outlet_id', $outletId)->orderBy('nama_kategori', 'asc')->get();
-        
+
         $suppliers = Supplier::where('outlet_id', $outletId)->orderBy('nama_supplier', 'asc')->get();
 
         return view('user.page.product-edit', compact('product', 'categories', 'suppliers'));
@@ -179,7 +200,13 @@ class ProductController extends Controller
             ],
             'deskripsi' => 'nullable|string',
             'harga_jual' => 'required|numeric|min:0',
+
+            // Validasi Restock Qty (Hanya jika supplier dipilih)
+            'restock_qty' => 'nullable|integer|min:0',
+
+            // Stok tetap divalidasi, tapi nanti kita hitung ulang di controller jika ada restock
             'stok' => 'required_without:is_unlimited|nullable|integer|min:0',
+
             'diskon_tipe' => 'nullable|in:percentage,fixed',
             'diskon_nilai' => 'nullable|numeric|min:0|required_with:diskon_tipe',
             'status' => 'required|in:available,unavailable',
@@ -199,63 +226,72 @@ class ProductController extends Controller
             $validatedData['image'] = $path;
         }
 
+        // Hapus field bantuan agar tidak error saat update model
+        unset($validatedData['catatan_stok']);
+        unset($validatedData['restock_qty']);
+
         DB::beginTransaction();
         try {
             $oldStock = $product->stok;
-            $newStock = $request->has('is_unlimited') ? null : (int) $request->stok;
-            
+            $newStock = null;
+            $tipeGerakan = 'restock'; // Default
+            $jumlahGerakan = 0;
+
+            // LOGIKA PENENTUAN STOK BARU
+
+            // KASUS 1: Jika Supplier Dipilih & Ada Input Restock -> Tambahkan ke Stok Lama
+            if ($request->filled('supplier_id') && $request->filled('restock_qty') && $request->restock_qty > 0) {
+                // Pastikan stok lama dianggap 0 jika null (unlimited) agar bisa dijumlah
+                $currentStockVal = $oldStock ?? 0;
+                $newStock = $currentStockVal + (int) $request->restock_qty;
+
+                $validatedData['stok'] = $newStock; // Override data stok
+                $jumlahGerakan = (int) $request->restock_qty;
+                $tipeGerakan = 'restock';
+            }
+            // KASUS 2: Edit Manual (Tanpa Supplier / Tanpa Restock)
+            else {
+                $newStock = $request->has('is_unlimited') ? null : (int) $request->stok;
+
+                // Hitung selisih untuk mencatat movement
+                if (!is_null($oldStock) && !is_null($newStock)) {
+                    $diff = $newStock - $oldStock;
+                    $jumlahGerakan = abs($diff);
+                    $tipeGerakan = $diff > 0 ? 'restock' : 'penjualan';
+                } elseif (is_null($oldStock) && !is_null($newStock)) {
+                    // Dari Unlimited ke Angka
+                    $jumlahGerakan = $newStock;
+                    $tipeGerakan = 'restock';
+                }
+                // Kasus lain (tetap unlimited atau unlimited baru) dianggap gerakan 0/simbolis
+            }
+
             // Update Produk
             $product->update($validatedData);
 
-            // Logika Stock Movement yang Lebih Aman
-            // 1. Jika keduanya Angka (Normal Update)
-            if (!is_null($oldStock) && !is_null($newStock)) {
-                $diff = $newStock - $oldStock;
-                if ($diff != 0) {
-                    $tipe = $diff > 0 ? 'restock' : 'penjualan';
-                    
-                    if($request->filled('supplier_id') && $diff > 0) {
-                         $tipe = 'restock';
-                    }
-                    
-                    $catatan = $request->catatan_stok;
-                    if(empty($catatan)) {
-                        $catatan = $diff > 0 ? 'Penambahan Stok Manual' : 'Pengurangan Stok Manual';
-                    }
+            // Catat Movement jika ada perubahan atau restock
+            if ($jumlahGerakan > 0 || ($oldStock !== $newStock)) {
+                $catatan = $request->catatan_stok;
 
-                    StockMovement::create([
-                        'product_id' => $product->id,
-                        'user_id' => Auth::id(),
-                        'tipe_gerakan' => $tipe,
-                        'jumlah' => abs($diff),
-                        'catatan' => $catatan,
-                    ]);
+                if (empty($catatan)) {
+                    if ($request->filled('restock_qty') && $request->restock_qty > 0) {
+                        $catatan = 'Restock via Supplier';
+                    } else {
+                        $catatan = 'Update Stok Manual';
+                    }
                 }
-            }
-            // 2. Transisi: Dari Terbatas ke Unlimited
-            elseif (!is_null($oldStock) && is_null($newStock)) {
+
                 StockMovement::create([
                     'product_id' => $product->id,
                     'user_id' => Auth::id(),
-                    'tipe_gerakan' => 'restock',
-                    'jumlah' => 0, // Simbolis
-                    'catatan' => 'Ubah status ke Stok Unlimited. ' . ($request->catatan_stok ?? ''),
-                ]);
-            }
-            // 3. Transisi: Dari Unlimited ke Terbatas
-            elseif (is_null($oldStock) && !is_null($newStock)) {
-                StockMovement::create([
-                    'product_id' => $product->id,
-                    'user_id' => Auth::id(),
-                    'tipe_gerakan' => 'restock',
-                    'jumlah' => $newStock, 
-                    'catatan' => 'Ubah dari Unlimited ke Stok Terbatas. ' . ($request->catatan_stok ?? ''),
+                    'tipe_gerakan' => $tipeGerakan,
+                    'jumlah' => $jumlahGerakan,
+                    'catatan' => $catatan . ($newStock === null ? ' (Menjadi Unlimited)' : ''),
                 ]);
             }
 
             DB::commit();
             return redirect()->route('kasir.products.index')->with('success', 'Produk berhasil diperbarui.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->with('error', 'Gagal update produk: ' . $e->getMessage());
