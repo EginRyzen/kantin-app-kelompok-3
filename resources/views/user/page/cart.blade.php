@@ -64,16 +64,22 @@
                                         </svg>
                                     </button>
 
-                                    {{-- Counter QTY --}}
+                                    {{-- Counter QTY (UPDATED) --}}
                                     <div class="flex items-center bg-gray-50 rounded-lg border border-gray-200 h-8">
-                                        <button onclick="updateQty({{ $id }}, -1)"
+                                        {{-- Tombol Minus --}}
+                                        <button onclick="updateQtyByButton({{ $id }}, -1)"
                                             class="w-8 h-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-red-500 rounded-l-lg transition font-bold text-sm">-</button>
 
-                                        <input type="text" id="qty-{{ $id }}" readonly
-                                            value="{{ $details['qty'] }}"
-                                            class="w-10 h-full text-center bg-transparent text-sm font-bold text-gray-800 border-none p-0 focus:ring-0">
+                                        {{-- Input QTY (EDITABLE) --}}
+                                        {{-- Perubahan: type="number", hapus readonly, tambah onchange, tambah data-last-valid --}}
+                                        <input type="number" id="qty-{{ $id }}" value="{{ $details['qty'] }}"
+                                            min="1" data-last-valid="{{ $details['qty'] }}"
+                                            onchange="updateQtyManual({{ $id }}, this)"
+                                            onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                            class="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none w-12 h-full text-center bg-transparent text-sm font-bold text-gray-800 border-none p-0 focus:ring-0">
 
-                                        <button onclick="updateQty({{ $id }}, 1)"
+                                        {{-- Tombol Plus --}}
+                                        <button onclick="updateQtyByButton({{ $id }}, 1)"
                                             class="w-8 h-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-green-600 rounded-r-lg transition font-bold text-sm">+</button>
                                     </div>
                                 </div>
@@ -102,12 +108,12 @@
                 {{-- State Kosong --}}
                 <div class="flex flex-col items-center justify-center py-16 text-center">
                     <div class="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-4 text-green-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="w-12 h-12">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-                    </svg>
-                </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-12 h-12">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                        </svg>
+                    </div>
                     <h3 class="text-lg font-bold text-gray-800 mb-1">Keranjang Kosong</h3>
                     <p class="text-gray-500 text-sm mb-6">Belum ada menu yang dipilih nih.</p>
                     <a href="{{ route('kasir.home') }}"
@@ -116,7 +122,7 @@
                 </div>
             @endif
 
-            {{-- MODAL ALERT STOK (BARU) --}}
+            {{-- MODAL ALERT STOK --}}
             <div id="stock-alert-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
                 <div class="fixed inset-0 bg-black/50 transition-opacity" onclick="closeStockModal()"></div>
                 <div class="flex min-h-full items-center justify-center p-4">
@@ -130,8 +136,7 @@
                             </svg>
                         </div>
                         <h3 class="text-lg font-bold leading-6 text-gray-900" id="stock-alert-title">Stok Terbatas</h3>
-                        <p class="mt-2 text-sm text-gray-500" id="stock-alert-message">Stok produk tidak mencukupi
-                            permintaan.</p>
+                        <p class="mt-2 text-sm text-gray-500" id="stock-alert-message">Stok produk tidak mencukupi.</p>
                         <div class="mt-6">
                             <button type="button" onclick="closeStockModal()"
                                 class="w-full rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
@@ -142,7 +147,7 @@
                 </div>
             </div>
 
-            {{-- MODAL CHECKOUT --}}
+            {{-- MODAL CHECKOUT (SAMA SEPERTI SEBELUMNYA) --}}
             <div id="checkout-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
                 {{-- Backdrop --}}
                 <div class="fixed inset-0 bg-black/50 transition-opacity" onclick="closeModal()"></div>
@@ -199,7 +204,7 @@
                                             placeholder="0">
                                     </div>
 
-                                    {{-- BUTTON PILIHAN UANG (BARU) --}}
+                                    {{-- BUTTON PILIHAN UANG --}}
                                     <div class="grid grid-cols-3 gap-2">
                                         <button type="button" onclick="setUangPas()"
                                             class="bg-white border border-green-200 text-green-700 hover:bg-green-600 hover:text-white py-1.5 rounded-lg text-xs font-bold transition shadow-sm">
@@ -266,7 +271,7 @@
                 minimumFractionDigits: 0
             });
 
-            // LOGIC BARU: MODAL ALERT
+            // LOGIC MODAL ALERT
             function showStockModal(message) {
                 document.getElementById('stock-alert-message').innerText = message;
                 document.getElementById('stock-alert-modal').classList.remove('hidden');
@@ -276,14 +281,38 @@
                 document.getElementById('stock-alert-modal').classList.add('hidden');
             }
 
-            function updateQty(id, change) {
+            // --- LOGIC UPDATE QUANTITY (DIPERBARUI) ---
+
+            // 1. Logic untuk Tombol +/-
+            function updateQtyByButton(id, change) {
                 let input = document.getElementById('qty-' + id);
-                let currentQty = parseInt(input.value);
+                let currentQty = parseInt(input.value) || 0;
                 let newQty = currentQty + change;
 
+                processQtyUpdate(id, newQty, input);
+            }
+
+            // 2. Logic untuk Input Manual (Ketik)
+            function updateQtyManual(id, inputElement) {
+                let newQty = parseInt(inputElement.value);
+
+                // Jika user mengosongkan input atau isi negatif, kembalikan ke 1
+                if (isNaN(newQty) || newQty < 1) {
+                    newQty = 1;
+                }
+
+                processQtyUpdate(id, newQty, inputElement);
+            }
+
+            // 3. Fungsi Utama Pemroses Update ke Server
+            function processQtyUpdate(id, newQty, inputElement) {
+                // Cek hapus jika 0 atau kurang (hanya relevan jika dari tombol minus)
                 if (newQty < 1) {
                     if (confirm('Hapus item ini?')) {
                         removeItem(id);
+                    } else {
+                        // Jika batal hapus, kembalikan ke angka sebelumnya (dari atribut data)
+                        inputElement.value = inputElement.getAttribute('data-last-valid');
                     }
                     return;
                 }
@@ -303,14 +332,25 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
-                            // HANYA UPDATE ANGKA JIKA SUKSES
-                            input.value = newQty;
+                            // SUKSES: Update value input & total
+                            inputElement.value = newQty;
+                            // Simpan nilai valid terakhir
+                            inputElement.setAttribute('data-last-valid', newQty);
                             document.getElementById('total-price').innerText = formatter.format(data.grand_total);
                         } else if (data.status === 'error_stock') {
-                            // MUNCULKAN MODAL JIKA STOK ERROR
+                            // GAGAL (STOK KURANG): Munculkan modal
                             showStockModal(data.message);
-                            // JANGAN update input.value, biarkan di angka lama
+
+                            // Kembalikan nilai input ke nilai valid terakhir
+                            let lastValid = inputElement.getAttribute('data-last-valid');
+                            inputElement.value = lastValid;
                         }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Jika error jaringan, kembalikan ke nilai terakhir
+                        let lastValid = inputElement.getAttribute('data-last-valid');
+                        inputElement.value = lastValid;
                     });
             }
 
@@ -336,7 +376,7 @@
                     });
             }
 
-            // --- MODAL & CHECKOUT LOGIC (Sama seperti sebelumnya) ---
+            // --- MODAL & CHECKOUT LOGIC (TIDAK BERUBAH) ---
             function checkout() {
                 let totalText = document.getElementById('total-price').innerText;
                 let totalNumeric = parseInt(totalText.replace(/[^0-9]/g, ''));

@@ -117,7 +117,7 @@
                                 </form>
                             </div>
 
-                            @if ($product->status == 'available' && $product->stok > 0)
+                            @if ($product->status == 'available' && (is_null($product->stok) || $product->stok > 0))
                                 <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                                     Tersedia
                                 </span>
@@ -150,9 +150,15 @@
                         <div class="text-sm mt-3">
                             <p class="text-gray-600">
                                 Stok:
-                                <span class="font-bold {{ $product->stok > 0 ? 'text-gray-900' : 'text-red-600' }}">
-                                    {{ $product->stok }}
-                                </span>
+                                @if (is_null($product->stok))
+                                    <span class="font-bold text-green-600">
+                                        ∞ (Unlimited)
+                                    </span>
+                                @else
+                                    <span class="font-bold {{ $product->stok > 0 ? 'text-gray-900' : 'text-red-600' }}">
+                                        {{ $product->stok }}
+                                    </span>
+                                @endif
                             </p>
                         </div>
 

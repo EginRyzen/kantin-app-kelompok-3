@@ -67,11 +67,12 @@
                          alt="{{ $product->nama_produk }}">
                     
                     {{-- Stok Badge --}}
-                    @if($product->stok <= 0)
+                    @if(!is_null($product->stok) && $product->stok <= 0)
                         <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
                             <span class="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">Habis</span>
                         </div>
-                    @elseif($product->stok <= 10)
+                    {{-- Logic: Jika Stok TIDAK NULL (artinya terbatas) DAN Stok <= 10, munculkan sisa --}}
+                    @elseif(!is_null($product->stok) && $product->stok <= 10)
                         <span class="absolute top-2 left-2 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
                             Sisa {{ $product->stok }}
                         </span>
@@ -93,19 +94,19 @@
                             @endif
                         </div>
 
-                        {{-- Tombol Tambah ke Keranjang (+) --}}
-                        @if($product->stok > 0 && $product->status == 'available')
+                        @if($product->status == 'available' && ($product->stok > 0 || is_null($product->stok)))
                             <button onclick="addToCart({{ $product->id }}, '{{ $product->nama_produk }}', {{ $product->harga_akhir }}, '{{ $product->image }}')" 
                                     class="bg-green-100 text-green-600 w-8 h-8 rounded-full flex items-center justify-center hover:bg-green-600 hover:text-white transition-all active:scale-90 shadow-sm"
                                     title="Tambah ke Keranjang">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                 </svg>
                             </button>
                         @else
+                            {{-- Tombol Disabled --}}
                             <button disabled class="bg-gray-100 text-gray-300 w-8 h-8 rounded-full flex items-center justify-center cursor-not-allowed">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                 </svg>
                             </button>
                         @endif

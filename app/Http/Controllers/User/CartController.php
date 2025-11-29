@@ -30,7 +30,9 @@ class CartController extends Controller
         $currentQtyInCart = isset($cart[$id]) ? $cart[$id]['qty'] : 0;
         $requestedQty = $currentQtyInCart + 1;
 
-        if ($requestedQty > $product->stok) {
+        // PERBAIKAN DI SINI:
+        // Cek stok hanya jika stok TIDAK NULL (Bukan Unlimited)
+        if (!is_null($product->stok) && $requestedQty > $product->stok) {
             return response()->json([
                 'status' => 'error_stock',
                 'message' => 'Stok produk tidak mencukupi! Sisa stok: ' . $product->stok
@@ -68,8 +70,9 @@ class CartController extends Controller
             $cart = session()->get('cart');
             $product = Product::find($request->id);
 
-            // Cek Stok sebelum update
-            if ($request->qty > $product->stok) {
+            // PERBAIKAN DI SINI JUGA:
+            // Cek Stok sebelum update (Hanya jika bukan unlimited)
+            if (!is_null($product->stok) && $request->qty > $product->stok) {
                 return response()->json([
                     'status' => 'error_stock',
                     'message' => 'Maksimal stok tersedia hanya ' . $product->stok
