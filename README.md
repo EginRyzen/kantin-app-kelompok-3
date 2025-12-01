@@ -26,11 +26,17 @@ MySQL / database lain sesuai konfigurasi
 🍽️ Fitur Utama
 
 ✔ Melihat daftar menu makanan & minuman
+
 ✔ Menambah pesanan ke keranjang
+
 ✔ Mengubah kuantitas pesanan
+
 ✔ Checkout pemesanan
+
 ✔ Admin mengelola menu (tambah, edit, hapus)
+
 ✔ Admin mengelola pesanan masuk
+
 ✔ Sistem login untuk admin/user (opsional)
 
 
