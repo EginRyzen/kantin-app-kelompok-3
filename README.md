@@ -5,9 +5,7 @@ Aplikasi Kantin adalah platform pemesanan berbasis web yang membantu pelanggan m
 Aplikasi ini dibuat sebagai tugas kelompok untuk memahami pembuatan aplikasi web full-stack, mulai dari backend, tampilan, hingga alur pemesanan.
 Proyek ini dibuat sebagai tugas kelompok untuk membangun aplikasi kantin digital.
 
-👥 # Anggota Kelompok 3
-
-# Daftar Anggota Kelompok 3
+# 👥  Anggota Kelompok 3
 
 | No | Nama                            | NIM         |
 |----|---------------------------------|------------ |
