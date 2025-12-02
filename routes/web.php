@@ -15,6 +15,7 @@ use App\Http\Controllers\User\ProductController;
 use App\Http\Controllers\User\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\User\TransactionController;
+use App\Http\Controllers\User\StockMovementController; 
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -68,8 +69,6 @@ Route::middleware(['auth'])->group(function () {
 
         // 5. LAPORAN TOKO (MENU DOMPET)
         Route::get('/store-report', [UserController::class, 'storeReport'])->name('store.report');
-        
-        // --- ROUTE DETAIL LAPORAN TOKO (TAMBAHKAN INI) ---
         Route::get('/store-report/today', [UserController::class, 'reportToday'])->name('store.report.today');
         Route::get('/store-report/week', [UserController::class, 'reportWeek'])->name('store.report.week');
         Route::get('/store-report/month', [UserController::class, 'reportMonth'])->name('store.report.month');
@@ -85,7 +84,12 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('suppliers', SupplierController::class);
         Route::resource('payment-methods', PaymentMethodController::class);
         Route::resource('users-outlets', ManajemenUserController::class);
+
+        // --- 8. MOVEMENT STOK (BARU) ---
+        // Pastikan baris ini ada agar menu bisa diakses
+        Route::get('/stock-movements', [StockMovementController::class, 'index'])->name('stock-movements.index');
     });
+
     // ====================================================
     // GROUP KHUSUS ADMIN
     // ====================================================
