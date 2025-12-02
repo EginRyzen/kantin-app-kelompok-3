@@ -13,7 +13,7 @@
         </div>
 
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <form action="{{ route('kasir.users.update', $userToEdit->id) }}" method="POST">
+            <form action="{{ route('kasir.users-outlets.update', $userToEdit->id) }}" method="POST">
                 @csrf
                 @method('PUT')
                 
