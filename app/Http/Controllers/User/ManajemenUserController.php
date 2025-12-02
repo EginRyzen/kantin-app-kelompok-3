@@ -60,7 +60,7 @@ class ManajemenUserController extends Controller
             'password'     => Hash::make($request->password),
         ]);
 
-        return redirect()->route('kasir.users.index')->with('success', 'User berhasil ditambahkan.');
+        return redirect()->route('kasir.users-outlets.index')->with('success', 'User berhasil ditambahkan.');
     }
 
     /**
@@ -120,7 +120,7 @@ class ManajemenUserController extends Controller
 
         $userToUpdate->save();
 
-        return redirect()->route('kasir.users.index')->with('success', 'Data user diperbarui.');
+        return redirect()->route('kasir.users-outlets.index')->with('success', 'Data user diperbarui.');
     }
 
     /**
@@ -144,6 +144,6 @@ class ManajemenUserController extends Controller
 
         $userToDelete->delete();
 
-        return redirect()->route('kasir.users.index')->with('success', 'User berhasil dihapus.');
+        return redirect()->route('kasir.users-outlets.index')->with('success', 'User berhasil dihapus.');
     }
 }

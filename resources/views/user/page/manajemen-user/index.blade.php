@@ -28,7 +28,7 @@
                 </div>
             </div>
 
-            <a href="{{ route('kasir.users.create') }}" class="bg-green-600 text-white px-4 py-2.5 rounded-xl shadow-lg shadow-green-200 hover:bg-green-700 transition flex items-center gap-2 text-sm font-bold">
+            <a href="{{ route('kasir.users-outlets.create') }}" class="bg-green-600 text-white px-4 py-2.5 rounded-xl shadow-lg shadow-green-200 hover:bg-green-700 transition flex items-center gap-2 text-sm font-bold">
                 <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Tambah User</span>
             </a>
         </div>

@@ -13,7 +13,7 @@
         </div>
 
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <form action="{{ route('kasir.users.store') }}" method="POST">
+            <form action="{{ route('kasir.users-outlets.store') }}" method="POST">
                 @csrf
                 
                 <div class="space-y-4">
