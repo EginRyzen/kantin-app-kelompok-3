@@ -142,7 +142,14 @@
                 <input type="number" id="restock_qty" name="restock_qty" value=""
                     class="bg-blue-50 border border-blue-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
                     placeholder="0">
-                <p class="text-xs text-gray-500 mt-1">Masukkan jumlah barang masuk.</p>
+                <div id="reduction-wrapper">
+                    <label for="reduction_qty" class="block mb-1 text-sm font-medium text-red-700">
+                        Kurangi Stok (-) <span class="text-xs text-red-500 font-normal">(Rusak/Hilang)</span>
+                    </label>
+                    <input type="number" id="reduction_qty" name="reduction_qty" value="" min="0"
+                        class="bg-red-50 border border-red-300 text-gray-900 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5"
+                        placeholder="0">
+                </div>
             </div>
 
             <div>
@@ -211,174 +218,186 @@
     </form>
 
     <script>
-        // 1. Logic Image Preview (Tetap sama)
-        const imageInput = document.getElementById('image');
-        const imagePreview = document.getElementById('image-preview');
-        const imagePlaceholder = document.getElementById('image-placeholder');
+    // 1. Logic Image Preview (Tetap Sama)
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('image-preview');
+    const imagePlaceholder = document.getElementById('image-placeholder');
 
-        if (imageInput) {
-            imageInput.addEventListener('change', function(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        imagePreview.src = e.target.result;
-                        imagePreview.classList.remove('hidden');
-                        if (imagePlaceholder) imagePlaceholder.classList.add('hidden');
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
+    if (imageInput) {
+        imageInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    if (imagePlaceholder) imagePlaceholder.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
 
-        // 2. LOGIC UTAMA: Supplier, Restock, & Stok Total
-        const supplierSelect = document.getElementById('supplier_id');
-        const restockContainer = document.getElementById('restock-container');
-        const restockInput = document.getElementById('restock_qty');
-        const stockInput = document.getElementById('stok');
-        const stockHelper = document.getElementById('stok-helper');
-        const unlimitedCheckbox = document.getElementById('is_unlimited');
-        const catatanField = document.getElementById('catatan-field');
-        const oldStockVal = parseInt(document.getElementById('old_stock').value) || 0;
+    // 2. LOGIC UTAMA: Supplier, Restock, Pengurangan & Stok Total
+    const supplierSelect = document.getElementById('supplier_id');
+    const restockContainer = document.getElementById('restock-container'); // Pastikan ID div pembungkus input restock/kurang benar
+    
+    // Input Stok
+    const restockInput = document.getElementById('restock_qty');
+    const reductionInput = document.getElementById('reduction_qty'); // <--- VARIABLE BARU
+    const stockInput = document.getElementById('stok');
+    
+    // Helper & Checkbox
+    const stockHelper = document.getElementById('stok-helper');
+    const unlimitedCheckbox = document.getElementById('is_unlimited');
+    const catatanField = document.getElementById('catatan-field');
+    
+    // Ambil Stok Lama dari hidden input
+    const oldStockVal = parseInt(document.getElementById('old_stock').value) || 0;
 
-        function updateStockLogic() {
-            const hasSupplier = supplierSelect.value !== "";
-            const isUnlimited = unlimitedCheckbox.checked;
-            const restockVal = parseInt(restockInput.value) || 0;
+    function updateStockLogic() {
+        const hasSupplier = supplierSelect.value !== "";
+        const isUnlimited = unlimitedCheckbox.checked;
+        
+        // Ambil nilai input (default 0 jika kosong)
+        const restockVal = parseInt(restockInput.value) || 0;
+        const reductionVal = parseInt(reductionInput.value) || 0; // <--- AMBIL NILAI PENGURANGAN
 
-            if (hasSupplier) {
-                // --- KASUS 1: MODE SUPPLIER (SUPPLIER DIPILIH) ---
-                // Stok Total WAJIB terkunci dan dihitung otomatis
+        // Cek apakah user sedang mengisi salah satu field mutasi (Restock atau Kurang)
+        const hasMutationInput = (restockVal > 0 || reductionVal > 0);
 
+        if (hasSupplier) {
+            // --- KASUS 1: MODE SUPPLIER (STOK TERKUNCI) ---
+            
+            restockContainer.classList.remove('hidden');
+            catatanField.classList.remove('hidden');
+
+            // Matikan Unlimited
+            unlimitedCheckbox.checked = false;
+            unlimitedCheckbox.disabled = true;
+            unlimitedCheckbox.parentElement.classList.add('opacity-50');
+
+            // RUMUS: Stok Awal + Restock - Pengurangan
+            let finalStock = oldStockVal + restockVal - reductionVal;
+            if (finalStock < 0) finalStock = 0; // Cegah minus
+
+            stockInput.value = finalStock;
+
+            // Kunci Field Stok Total
+            stockInput.setAttribute('readonly', true);
+            stockInput.classList.remove('bg-gray-50', 'bg-white');
+            stockInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'text-gray-500');
+
+            // Tampilkan Helper Text
+            stockHelper.innerText = `Stok terkunci (Otomatis: ${oldStockVal} + ${restockVal} - ${reductionVal})`;
+            stockHelper.classList.remove('hidden');
+
+        } else {
+            // --- KASUS 2: MODE MANUAL (TANPA SUPPLIER) ---
+
+            catatanField.classList.add('hidden');
+            unlimitedCheckbox.disabled = false;
+            unlimitedCheckbox.parentElement.classList.remove('opacity-50');
+
+            // Toggle Visibility Container Mutasi
+            if (isUnlimited) {
+                restockContainer.classList.add('hidden');
+                restockInput.value = '';
+                reductionInput.value = ''; // Reset pengurangan
+            } else {
                 restockContainer.classList.remove('hidden');
-                catatanField.classList.remove('hidden');
+            }
 
-                // Matikan Unlimited
-                unlimitedCheckbox.checked = false;
-                unlimitedCheckbox.disabled = true;
-                unlimitedCheckbox.parentElement.classList.add('opacity-50');
+            // LOGIKA HYBRID:
+            // Jika user mengisi Restock ATAU Pengurangan -> Stok Total Terkunci & Otomatis
+            if (!isUnlimited && hasMutationInput) {
+                // RUMUS: Stok Awal + Restock - Pengurangan
+                let finalStock = oldStockVal + restockVal - reductionVal;
+                if (finalStock < 0) finalStock = 0;
 
-                // Kalkulasi Otomatis (Stok Lama + Input Restock)
-                stockInput.value = oldStockVal + restockVal;
+                stockInput.value = finalStock;
 
-                // KUNCI FIELD (TAPI DATA TETAP TERKIRIM)
                 stockInput.setAttribute('readonly', true);
-                stockInput.disabled = false; // Penting: Jangan disabled agar lolos validasi required
-
-                // VISUAL: Buat terlihat mati (bg-gray-200)
                 stockInput.classList.remove('bg-gray-50', 'bg-white');
                 stockInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'text-gray-500');
 
-                // Tampilkan Helper Text
-                stockHelper.innerText = "Stok terkunci (Otomatis: Stok Lama + Restock)";
                 stockHelper.classList.remove('hidden');
+                stockHelper.innerText = `Otomatis terhitung (Awal: ${oldStockVal} + Masuk: ${restockVal} - Keluar: ${reductionVal})`;
+            }
+            // Jika Input Mutasi Kosong Semua -> User bebas edit Stok Total (Manual Edit Biasa)
+            else if (!isUnlimited) {
+                stockInput.removeAttribute('readonly');
+                stockInput.classList.remove('bg-gray-200', 'cursor-not-allowed', 'text-gray-500');
+                stockInput.classList.add('bg-gray-50');
 
+                stockHelper.classList.add('hidden');
+
+                // Jika field kosong, kembalikan ke stok lama agar tidak terlihat error
+                if (stockInput.value === '') {
+                    stockInput.value = oldStockVal;
+                }
+            }
+        }
+
+        handleUnlimitedCheck();
+    }
+
+    function handleUnlimitedCheck() {
+        if (!unlimitedCheckbox.disabled) {
+            if (unlimitedCheckbox.checked) {
+                // Jika Unlimited: Matikan semua input angka
+                stockInput.setAttribute('readonly', true);
+                stockInput.placeholder = "∞ (Unlimited)";
+                stockInput.value = "";
+                stockInput.classList.remove('bg-gray-50', 'bg-white');
+                stockInput.classList.add('bg-gray-200', 'cursor-not-allowed');
+                
+                restockContainer.classList.add('hidden');
+                restockInput.value = '';
+                reductionInput.value = '';
             } else {
-                // --- KASUS 2: MODE MANUAL (TANPA SUPPLIER) ---
-
-                catatanField.classList.add('hidden');
-                unlimitedCheckbox.disabled = false;
-                unlimitedCheckbox.parentElement.classList.remove('opacity-50');
-
-                // Tampilkan input restock jika TIDAK unlimited
-                if (isUnlimited) {
-                    restockContainer.classList.add('hidden');
-                    restockInput.value = '';
-                } else {
+                // Jika Uncheck Unlimited
+                if (supplierSelect.value === "") {
+                    // Kembalikan ke tampilan edit manual
+                    stockInput.setAttribute('readonly', true); // Akan di-handle updateStockLogic
+                    stockInput.placeholder = "0";
+                }
+                
+                // Pastikan input mutasi muncul lagi
+                if (restockContainer.classList.contains('hidden') && supplierSelect.value === "") {
                     restockContainer.classList.remove('hidden');
                 }
-
-                // LOGIKA HYBRID:
-                // A. Jika user mengetik di Restock -> Stok Total Terkunci & Otomatis
-                if (!isUnlimited && restockVal > 0) {
-                    stockInput.value = oldStockVal + restockVal;
-
-                    stockInput.setAttribute('readonly', true);
-                    stockInput.classList.remove('bg-gray-50', 'bg-white');
-                    stockInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'text-gray-500'); // Warna Gelap
-
-                    stockHelper.classList.remove('hidden');
-                    stockHelper.innerText = "Otomatis terhitung (Awal + Restock Input)";
-                }
-                // B. Jika Restock Kosong -> User bebas edit Stok Total (Koreksi Stok)
-                else if (!isUnlimited) {
-                    stockInput.removeAttribute('readonly');
-
-                    // Kembalikan ke warna normal (putih/terang)
-                    stockInput.classList.remove('bg-gray-200', 'cursor-not-allowed', 'text-gray-500');
-                    stockInput.classList.add('bg-gray-50'); // Atau bg-white sesuai selera
-
-                    stockHelper.classList.add('hidden');
-
-                    // Kembalikan ke stok lama jika field kosong agar tidak error
-                    if (stockInput.value === '') {
-                        stockInput.value = oldStockVal;
-                    }
-                }
             }
+        }
+    }
 
+    // 3. Logic Diskon (Tetap Sama)
+    function handleDiscountChange() {
+        const typeSelect = document.getElementById('diskon_tipe');
+        const valueInput = document.getElementById('diskon_nilai');
+
+        if (typeSelect.value === "") {
+            valueInput.disabled = true;
+            valueInput.classList.add('bg-gray-200', 'cursor-not-allowed');
+        } else {
+            valueInput.disabled = false;
+            valueInput.classList.remove('bg-gray-200', 'cursor-not-allowed');
+        }
+    }
+
+    // 4. Init Listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        handleDiscountChange();
+        updateStockLogic();
+
+        supplierSelect.addEventListener('change', updateStockLogic);
+        restockInput.addEventListener('input', updateStockLogic);
+        reductionInput.addEventListener('input', updateStockLogic); // <--- LISTENER BARU
+        
+        unlimitedCheckbox.addEventListener('change', function() {
             handleUnlimitedCheck();
-        }
-
-        function handleUnlimitedCheck() {
-            // Jika unlimited dicentang
-            if (!unlimitedCheckbox.disabled) {
-                if (unlimitedCheckbox.checked) {
-                    // Mode Unlimited: Input Stok dimatikan total
-                    stockInput.setAttribute('readonly', true);
-                    stockInput.placeholder = "∞ (Unlimited)";
-                    stockInput.value = "";
-
-                    // Visual Gelap
-                    stockInput.classList.remove('bg-gray-50', 'bg-white');
-                    stockInput.classList.add('bg-gray-200', 'cursor-not-allowed');
-
-                    // Disabled false agar status unlimited terkirim, tapi validasi stok di-ignore di backend
-                    stockInput.disabled = false;
-
-                    restockContainer.classList.add('hidden');
-                    restockInput.value = '';
-                } else {
-                    // Jika di-uncheck, kembalikan ke normal jika tidak ada supplier
-                    if (supplierSelect.value === "") {
-                        stockInput.setAttribute('readonly', true);
-                        stockInput.classList.remove('bg-gray-50', 'bg-white');
-                        stockInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'text-gray-500');
-                        stockInput.placeholder = "0";
-                    }
-
-                    if (restockContainer.classList.contains('hidden') && supplierSelect.value === "") {
-                        restockContainer.classList.remove('hidden');
-                    }
-                }
-            }
-        }
-
-        // 3. Logic Diskon
-        function handleDiscountChange() {
-            const typeSelect = document.getElementById('diskon_tipe');
-            const valueInput = document.getElementById('diskon_nilai');
-
-            if (typeSelect.value === "") {
-                valueInput.disabled = true;
-                valueInput.classList.add('bg-gray-200', 'cursor-not-allowed');
-            } else {
-                valueInput.disabled = false;
-                valueInput.classList.remove('bg-gray-200', 'cursor-not-allowed');
-            }
-        }
-
-        // 4. Init
-        document.addEventListener('DOMContentLoaded', function() {
-            handleDiscountChange();
             updateStockLogic();
-
-            supplierSelect.addEventListener('change', updateStockLogic);
-            restockInput.addEventListener('input', updateStockLogic);
-            unlimitedCheckbox.addEventListener('change', function() {
-                handleUnlimitedCheck();
-                updateStockLogic();
-            });
         });
-    </script>
+    });
+</script>
 @endsection

@@ -185,47 +185,44 @@ class ProductController extends Controller
         if ($product->outlet_id != Auth::user()->outlet_id) {
             abort(403, 'Anda tidak diizinkan mengedit produk ini.');
         }
-       if (empty($request->supplier_id)) {
+
+        // 1. Pre-processing Input
+        if (empty($request->supplier_id)) {
             $request->merge(['supplier_id' => null]);
         }
         
-        // 2. Bersihkan stok jika unlimited (cegah error integer validation)
+        // Jika unlimited dicentang, paksa stok jadi null agar validasi integer lolos
         if ($request->filled('is_unlimited')) {
              $request->merge(['stok' => null]);
         }
 
-        // 3. Validasi
+        // 2. Validasi
         $validatedData = $request->validate([
             'outlet_id' => 'required|exists:outlets,id',
             'category_id' => 'required|exists:categories,id',
-            'supplier_id' => 'nullable|exists:suppliers,id', // Aman karena sudah di-merge null
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'nama_produk' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             Rule::unique('products')
-            ->where(function ($query) use ($product) {
-                return $query->where('outlet_id', $product->outlet_id);
-            })
-            ->ignore($product->id),
+                ->where(fn ($query) => $query->where('outlet_id', $product->outlet_id))
+                ->ignore($product->id),
             'deskripsi' => 'nullable|string',
             'harga_jual' => 'required|numeric|min:0',
-            'restock_qty' => 'nullable|integer|min:0',
             
-            // Perhatikan ini: Jika is_unlimited tidak dicentang, stok WAJIB ada (tidak boleh kosong/disabled)
-            'stok' => 'required_without:is_unlimited|nullable|integer|min:0',
+            // Validasi Input Mutasi (Restock & Reduction)
+            'restock_qty' => 'nullable|integer|min:0',
+            'reduction_qty' => 'nullable|integer|min:0', // <--- VALIDASI BARU
 
+            // Validasi Stok Total
+            'stok' => 'required_without:is_unlimited|nullable|integer|min:0',
+            
             'diskon_tipe' => 'nullable|in:percentage,fixed',
             'diskon_nilai' => 'nullable|numeric|min:0|required_with:diskon_tipe',
             'status' => 'required|in:available,unavailable',
             'catatan_stok' => 'nullable|string|max:255',
         ]);
 
-        // dd($validatedData);
-
-        // Handle Logic Unlimited
-        if ($request->has('is_unlimited')) {
-            $validatedData['stok'] = null;
-        }
-
+        // 3. Handle File Image
         if ($request->hasFile('image')) {
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
@@ -234,72 +231,111 @@ class ProductController extends Controller
             $validatedData['image'] = $path;
         }
 
-        // Hapus field bantuan agar tidak error saat update model
+        // Handle Logic Unlimited di Array
+        if ($request->has('is_unlimited')) {
+            $validatedData['stok'] = null;
+        }
+
+        // 4. Bersihkan Field Bantuan (Agar tidak error saat update ke tabel products)
         unset($validatedData['catatan_stok']);
         unset($validatedData['restock_qty']);
+        unset($validatedData['reduction_qty']); // <--- CLEANUP BARU
 
         DB::beginTransaction();
         try {
             $oldStock = $product->stok;
-            $newStock = null;
-            $tipeGerakan = 'restock'; // Default
-            $jumlahGerakan = 0;
+            
+            // Ambil value input mutasi
+            $restockVal = (int) $request->restock_qty;
+            $reductionVal = (int) $request->reduction_qty; // <--- VALUE BARU
 
-            // LOGIKA PENENTUAN STOK BARU
+            // --- LOGIKA PENENTUAN STOK BARU ---
 
-            // KASUS 1: Jika Supplier Dipilih & Ada Input Restock -> Tambahkan ke Stok Lama
-            if ($request->filled('supplier_id') && $request->filled('restock_qty') && $request->restock_qty > 0) {
-                // Pastikan stok lama dianggap 0 jika null (unlimited) agar bisa dijumlah
+            // KASUS 1: Jika ada Supplier, ATAU ada input Restock, ATAU ada input Pengurangan
+            // (Kita prioritaskan perhitungan mutasi daripada input manual 'stok' jika field ini diisi)
+            if ($request->filled('supplier_id') || $restockVal > 0 || $reductionVal > 0) {
+                
                 $currentStockVal = $oldStock ?? 0;
-                $newStock = $currentStockVal + (int) $request->restock_qty;
+                
+                // RUMUS: Stok Lama + Masuk - Keluar
+                $newStock = $currentStockVal + $restockVal - $reductionVal;
+                
+                // Safety check agar tidak minus di database
+                if ($newStock < 0) $newStock = 0; 
 
-                $validatedData['stok'] = $newStock; // Override data stok
-                $jumlahGerakan = (int) $request->restock_qty;
-                $tipeGerakan = 'restock';
+                $validatedData['stok'] = $newStock; // Override data stok yang akan diupdate
+
+                // Reset variable generic movement (karena kita akan buat movement spesifik di bawah)
+                $jumlahGerakanManual = 0; 
+                $tipeGerakanManual = null;
             }
-            // KASUS 2: Edit Manual (Tanpa Supplier / Tanpa Restock)
+            // KASUS 2: Edit Manual Stok Total (Tanpa mengisi field restock/reduction)
+            // Logic lama tetap jalan untuk koreksi cepat
             else {
                 $newStock = $request->has('is_unlimited') ? null : (int) $request->stok;
+                
+                $jumlahGerakanManual = 0;
+                $tipeGerakanManual = 'restock'; // default
 
-                // Hitung selisih untuk mencatat movement
                 if (!is_null($oldStock) && !is_null($newStock)) {
                     $diff = $newStock - $oldStock;
-                    $jumlahGerakan = abs($diff);
-                    $tipeGerakan = $diff > 0 ? 'restock' : 'penjualan';
+                    $jumlahGerakanManual = abs($diff);
+                    $tipeGerakanManual = $diff > 0 ? 'restock' : 'penjualan';
                 } elseif (is_null($oldStock) && !is_null($newStock)) {
                     // Dari Unlimited ke Angka
-                    $jumlahGerakan = $newStock;
-                    $tipeGerakan = 'restock';
+                    $jumlahGerakanManual = $newStock;
+                    $tipeGerakanManual = 'restock';
                 }
-                // Kasus lain (tetap unlimited atau unlimited baru) dianggap gerakan 0/simbolis
             }
 
-            // Update Produk
+            // --- UPDATE DATABASE ---
             $product->update($validatedData);
 
-            // Catat Movement jika ada perubahan atau restock
-            if ($jumlahGerakan > 0 || ($oldStock !== $newStock)) {
-                $catatan = $request->catatan_stok;
+            // --- PENCATATAN RIWAYAT (STOCK MOVEMENTS) ---
 
+            // A. Catat Restock (Jika field restock diisi)
+            if ($restockVal > 0) {
+                StockMovement::create([
+                    'product_id' => $product->id,
+                    'user_id' => Auth::id(),
+                    'tipe_gerakan' => 'restock',
+                    'jumlah' => $restockVal,
+                    'catatan' => $request->catatan_stok ?? ($request->filled('supplier_id') ? 'Restock via Supplier' : 'Restock Tambahan'),
+                ]);
+            }
+
+            // B. Catat Pengurangan (Jika field reduction diisi)
+            if ($reductionVal > 0) {
+                StockMovement::create([
+                    'product_id' => $product->id,
+                    'user_id' => Auth::id(),
+                    'tipe_gerakan' => 'rusak', // Masuk sebagai 'rusak' sesuai request
+                    'jumlah' => $reductionVal,
+                    'catatan' => $request->catatan_stok ?? 'Pengurangan Stok (Rusak/Kadaluwarsa)',
+                ]);
+            }
+
+            // C. Catat Perubahan Manual (Hanya jika TIDAK ada input restock/reduction)
+            // Ini untuk mencegah double recording
+            if ($restockVal == 0 && $reductionVal == 0 && ($jumlahGerakanManual > 0 || ($oldStock !== $product->stok))) {
+                
+                $catatan = $request->catatan_stok;
                 if (empty($catatan)) {
-                    if ($request->filled('restock_qty') && $request->restock_qty > 0) {
-                        $catatan = 'Restock via Supplier';
-                    } else {
-                        $catatan = 'Update Stok Manual';
-                    }
+                    $catatan = 'Update Stok Manual (Koreksi)';
                 }
 
                 StockMovement::create([
                     'product_id' => $product->id,
                     'user_id' => Auth::id(),
-                    'tipe_gerakan' => $tipeGerakan,
-                    'jumlah' => $jumlahGerakan,
-                    'catatan' => $catatan . ($newStock === null ? ' (Menjadi Unlimited)' : ''),
+                    'tipe_gerakan' => $tipeGerakanManual,
+                    'jumlah' => $jumlahGerakanManual,
+                    'catatan' => $catatan . ($product->stok === null ? ' (Menjadi Unlimited)' : ''),
                 ]);
             }
 
             DB::commit();
             return redirect()->route('kasir.products.index')->with('success', 'Produk berhasil diperbarui.');
+
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->with('error', 'Gagal update produk: ' . $e->getMessage());
