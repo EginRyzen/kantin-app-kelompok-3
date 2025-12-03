@@ -69,13 +69,6 @@
                         </div>
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Nomor HP / WhatsApp</label>
-                        <div class="relative">
-                            <i class="fa-brands fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                            <input type="text" name="no_hp" value="{{ old('no_hp', Auth::user()->no_hp ?? '') }}" placeholder="0812xxxx" class="w-full pl-11 pr-4 py-3 rounded-xl border-gray-200 focus:border-green-500 focus:ring-green-500 text-sm font-medium transition bg-gray-50 focus:bg-white placeholder-gray-300">
-                        </div>
-                    </div>
                 </div>
             </div>
 

@@ -76,7 +76,7 @@
 
                     <div class="w-2/3 p-4 relative">
 
-                        <div class="absolute top-4 right-4 flex flex-col items-end space-y-2 z-10">
+                        <div class="absolute top-4 right-4 flex flex-col items-end space-y-2 z-2">
 
                             <div>
                                 <button id="dropdownButton-{{ $product->id }}"
@@ -117,15 +117,17 @@
                                 </form>
                             </div>
 
-                            @if ($product->status == 'available' && (is_null($product->stok) || $product->stok > 0))
+                            <div>
+                                @if ($product->status == 'available' && (is_null($product->stok) || $product->stok > 0))
                                 <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                                     Tersedia
                                 </span>
                             @else
-                                <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                <span class="bg-red-100  text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                                     Habis / Belum Ready
                                 </span>
                             @endif
+                            </div>
                         </div>
 
                         <div class="pr-12">

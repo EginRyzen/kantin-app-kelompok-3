@@ -185,26 +185,32 @@ class ProductController extends Controller
         if ($product->outlet_id != Auth::user()->outlet_id) {
             abort(403, 'Anda tidak diizinkan mengedit produk ini.');
         }
+       if (empty($request->supplier_id)) {
+            $request->merge(['supplier_id' => null]);
+        }
+        
+        // 2. Bersihkan stok jika unlimited (cegah error integer validation)
+        if ($request->filled('is_unlimited')) {
+             $request->merge(['stok' => null]);
+        }
 
+        // 3. Validasi
         $validatedData = $request->validate([
             'outlet_id' => 'required|exists:outlets,id',
             'category_id' => 'required|exists:categories,id',
-            'supplier_id' => 'nullable|exists:suppliers,id',
+            'supplier_id' => 'nullable|exists:suppliers,id', // Aman karena sudah di-merge null
             'nama_produk' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'kode_produk' => [
-                'nullable',
-                'string',
-                'max:100',
-                Rule::unique('products')->ignore($product->id),
-            ],
+            Rule::unique('products')
+            ->where(function ($query) use ($product) {
+                return $query->where('outlet_id', $product->outlet_id);
+            })
+            ->ignore($product->id),
             'deskripsi' => 'nullable|string',
             'harga_jual' => 'required|numeric|min:0',
-
-            // Validasi Restock Qty (Hanya jika supplier dipilih)
             'restock_qty' => 'nullable|integer|min:0',
-
-            // Stok tetap divalidasi, tapi nanti kita hitung ulang di controller jika ada restock
+            
+            // Perhatikan ini: Jika is_unlimited tidak dicentang, stok WAJIB ada (tidak boleh kosong/disabled)
             'stok' => 'required_without:is_unlimited|nullable|integer|min:0',
 
             'diskon_tipe' => 'nullable|in:percentage,fixed',
@@ -212,6 +218,8 @@ class ProductController extends Controller
             'status' => 'required|in:available,unavailable',
             'catatan_stok' => 'nullable|string|max:255',
         ]);
+
+        // dd($validatedData);
 
         // Handle Logic Unlimited
         if ($request->has('is_unlimited')) {

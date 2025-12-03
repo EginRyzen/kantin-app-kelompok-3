@@ -15,13 +15,24 @@
         <h1 class="text-xl font-bold text-gray-800 text-right">Edit Produk</h1>
     </div>
 
+    @if ($errors->any())
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            <strong class="font-bold">Terjadi Kesalahan Validasi!</strong>
+            <ul class="mt-2 list-disc list-inside">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form action="{{ route('kasir.products.update', $product->id) }}" method="POST" enctype="multipart/form-data"
         class="space-y-5 pb-4">
         @csrf
         @method('PUT')
 
         <input type="hidden" name="outlet_id" value="{{ auth()->user()->outlet_id }}">
-        
+
         <input type="hidden" id="old_stock" value="{{ $product->stok ?? 0 }}">
 
         <div>
@@ -49,7 +60,8 @@
         </div>
 
         <div>
-            <label for="nama_produk" class="block mb-2 text-sm font-medium text-gray-700">Nama Produk <span class="text-red-500">*</span></label>
+            <label for="nama_produk" class="block mb-2 text-sm font-medium text-gray-700">Nama Produk <span
+                    class="text-red-500">*</span></label>
             <input type="text" id="nama_produk" name="nama_produk"
                 value="{{ old('nama_produk', $product->nama_produk) }}"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-3"
@@ -73,7 +85,8 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-                <label for="category_id" class="block mb-2 text-sm font-medium text-gray-700">Kategori <span class="text-red-500">*</span></label>
+                <label for="category_id" class="block mb-2 text-sm font-medium text-gray-700">Kategori <span
+                        class="text-red-500">*</span></label>
                 <select id="category_id" name="category_id" required
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-3">
                     <option value="" disabled>Pilih kategori</option>
@@ -102,7 +115,8 @@
 
         {{-- FIELD Catatan Stok --}}
         <div id="catatan-field" class="hidden bg-blue-50 p-4 rounded-lg border border-blue-100 transition-all duration-300">
-            <label for="catatan_stok" class="block mb-2 text-sm font-bold text-blue-700">Catatan Stok / No. Nota Supplier</label>
+            <label for="catatan_stok" class="block mb-2 text-sm font-bold text-blue-700">Catatan Stok / No. Nota
+                Supplier</label>
             <input type="text" id="catatan_stok" name="catatan_stok" value="{{ old('catatan_stok') }}"
                 class="bg-white border border-blue-200 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
                 placeholder="Contoh: Restock Faktur #INV-001">
@@ -110,7 +124,8 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
-                <label for="harga_jual" class="block mb-2 text-sm font-medium text-gray-700">Harga Jual <span class="text-red-500">*</span></label>
+                <label for="harga_jual" class="block mb-2 text-sm font-medium text-gray-700">Harga Jual <span
+                        class="text-red-500">*</span></label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-sm">Rp</span>
                     <input type="number" id="harga_jual" name="harga_jual"
@@ -159,9 +174,13 @@
                 <label for="diskon_tipe" class="block mb-2 text-sm font-medium text-gray-700">Tipe Diskon</label>
                 <select id="diskon_tipe" name="diskon_tipe" onchange="handleDiscountChange()"
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-3">
-                    <option value="" {{ old('diskon_tipe', $product['diskon_tipe']) == '' ? 'selected' : '' }}>Tidak ada diskon</option>
-                    <option value="percentage" {{ old('diskon_tipe', $product['diskon_tipe']) == 'percentage' ? 'selected' : '' }}>Persentase (%)</option>
-                    <option value="fixed" {{ old('diskon_tipe', $product['diskon_tipe']) == 'fixed' ? 'selected' : '' }}>Potongan Tetap (Rp)</option>
+                    <option value="" {{ old('diskon_tipe', $product['diskon_tipe']) == '' ? 'selected' : '' }}>Tidak
+                        ada diskon</option>
+                    <option value="percentage"
+                        {{ old('diskon_tipe', $product['diskon_tipe']) == 'percentage' ? 'selected' : '' }}>Persentase (%)
+                    </option>
+                    <option value="fixed" {{ old('diskon_tipe', $product['diskon_tipe']) == 'fixed' ? 'selected' : '' }}>
+                        Potongan Tetap (Rp)</option>
                 </select>
             </div>
             <div>
@@ -177,8 +196,10 @@
             <label for="status" class="block mb-2 text-sm font-medium text-gray-700">Status Awal</label>
             <select id="status" name="status"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-3">
-                <option value="available" {{ old('status', $product->status) == 'available' ? 'selected' : '' }}>Tersedia</option>
-                <option value="unavailable" {{ old('status', $product->status) == 'unavailable' ? 'selected' : '' }}>Tidak Tersedia</option>
+                <option value="available" {{ old('status', $product->status) == 'available' ? 'selected' : '' }}>Tersedia
+                </option>
+                <option value="unavailable" {{ old('status', $product->status) == 'unavailable' ? 'selected' : '' }}>Tidak
+                    Tersedia</option>
             </select>
         </div>
 
@@ -190,12 +211,12 @@
     </form>
 
     <script>
-        // 1. Logic Image Preview
+        // 1. Logic Image Preview (Tetap sama)
         const imageInput = document.getElementById('image');
         const imagePreview = document.getElementById('image-preview');
         const imagePlaceholder = document.getElementById('image-placeholder');
 
-        if(imageInput) {
+        if (imageInput) {
             imageInput.addEventListener('change', function(event) {
                 const file = event.target.files[0];
                 if (file) {
@@ -203,7 +224,7 @@
                     reader.onload = function(e) {
                         imagePreview.src = e.target.result;
                         imagePreview.classList.remove('hidden');
-                        if(imagePlaceholder) imagePlaceholder.classList.add('hidden');
+                        if (imagePlaceholder) imagePlaceholder.classList.add('hidden');
                     };
                     reader.readAsDataURL(file);
                 }
@@ -222,75 +243,113 @@
 
         function updateStockLogic() {
             const hasSupplier = supplierSelect.value !== "";
+            const isUnlimited = unlimitedCheckbox.checked;
+            const restockVal = parseInt(restockInput.value) || 0;
 
             if (hasSupplier) {
-                // --- MODE SUPPLIER ---
-                
-                // 1. Tampilkan Field Restock & Catatan
+                // --- KASUS 1: MODE SUPPLIER (SUPPLIER DIPILIH) ---
+                // Stok Total WAJIB terkunci dan dihitung otomatis
+
                 restockContainer.classList.remove('hidden');
                 catatanField.classList.remove('hidden');
 
-                // 2. Matikan Checkbox Unlimited (Karena barang supplier pasti terhitung)
+                // Matikan Unlimited
                 unlimitedCheckbox.checked = false;
                 unlimitedCheckbox.disabled = true;
                 unlimitedCheckbox.parentElement.classList.add('opacity-50');
 
-                // 3. Kunci Input Stok Total (Hanya Readonly)
+                // Kalkulasi Otomatis (Stok Lama + Input Restock)
+                stockInput.value = oldStockVal + restockVal;
+
+                // KUNCI FIELD (TAPI DATA TETAP TERKIRIM)
                 stockInput.setAttribute('readonly', true);
-                stockInput.classList.add('bg-gray-100'); // Visual readonly
+                stockInput.disabled = false; // Penting: Jangan disabled agar lolos validasi required
+
+                // VISUAL: Buat terlihat mati (bg-gray-200)
+                stockInput.classList.remove('bg-gray-50', 'bg-white');
+                stockInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'text-gray-500');
+
+                // Tampilkan Helper Text
+                stockHelper.innerText = "Stok terkunci (Otomatis: Stok Lama + Restock)";
                 stockHelper.classList.remove('hidden');
 
-                // 4. Kalkulasi Otomatis: Total = Lama + Restock
-                const restockQty = parseInt(restockInput.value) || 0;
-                stockInput.value = oldStockVal + restockQty;
-
             } else {
-                // --- MODE MANUAL (TANPA SUPPLIER) ---
+                // --- KASUS 2: MODE MANUAL (TANPA SUPPLIER) ---
 
-                // 1. Sembunyikan Restock & Catatan
-                restockContainer.classList.add('hidden');
                 catatanField.classList.add('hidden');
-                restockInput.value = ''; // Reset nilai restock
-
-                // 2. Hidupkan Checkbox Unlimited
                 unlimitedCheckbox.disabled = false;
                 unlimitedCheckbox.parentElement.classList.remove('opacity-50');
 
-                // 3. Buka Input Stok Total (Editable)
-                stockInput.removeAttribute('readonly');
-                stockInput.classList.remove('bg-gray-100');
-                stockHelper.classList.add('hidden');
+                // Tampilkan input restock jika TIDAK unlimited
+                if (isUnlimited) {
+                    restockContainer.classList.add('hidden');
+                    restockInput.value = '';
+                } else {
+                    restockContainer.classList.remove('hidden');
+                }
 
-                // 4. Kembalikan nilai ke stok lama (atau biarkan user edit)
-                // Kita cek dulu apakah unlimited dicentang
-                if (!unlimitedCheckbox.checked) {
-                    // Jika tidak unlimited, pastikan input aktif
-                    stockInput.disabled = false;
-                    stockInput.classList.remove('bg-gray-200');
-                    // Jika user belum edit manual, kembalikan ke stok lama
-                    if(stockInput.value == (oldStockVal + (parseInt(restockInput.value)||0))) {
+                // LOGIKA HYBRID:
+                // A. Jika user mengetik di Restock -> Stok Total Terkunci & Otomatis
+                if (!isUnlimited && restockVal > 0) {
+                    stockInput.value = oldStockVal + restockVal;
+
+                    stockInput.setAttribute('readonly', true);
+                    stockInput.classList.remove('bg-gray-50', 'bg-white');
+                    stockInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'text-gray-500'); // Warna Gelap
+
+                    stockHelper.classList.remove('hidden');
+                    stockHelper.innerText = "Otomatis terhitung (Awal + Restock Input)";
+                }
+                // B. Jika Restock Kosong -> User bebas edit Stok Total (Koreksi Stok)
+                else if (!isUnlimited) {
+                    stockInput.removeAttribute('readonly');
+
+                    // Kembalikan ke warna normal (putih/terang)
+                    stockInput.classList.remove('bg-gray-200', 'cursor-not-allowed', 'text-gray-500');
+                    stockInput.classList.add('bg-gray-50'); // Atau bg-white sesuai selera
+
+                    stockHelper.classList.add('hidden');
+
+                    // Kembalikan ke stok lama jika field kosong agar tidak error
+                    if (stockInput.value === '') {
                         stockInput.value = oldStockVal;
                     }
                 }
             }
-            
-            // Panggil logic unlimited standar untuk memastikan state input stok benar (disabled/enabled)
+
             handleUnlimitedCheck();
         }
 
         function handleUnlimitedCheck() {
-            // Hanya jalan jika checkbox TIDAK disabled (artinya mode manual)
+            // Jika unlimited dicentang
             if (!unlimitedCheckbox.disabled) {
                 if (unlimitedCheckbox.checked) {
-                    stockInput.disabled = true;
+                    // Mode Unlimited: Input Stok dimatikan total
+                    stockInput.setAttribute('readonly', true);
                     stockInput.placeholder = "∞ (Unlimited)";
                     stockInput.value = "";
-                    stockInput.classList.add('bg-gray-200');
-                } else {
+
+                    // Visual Gelap
+                    stockInput.classList.remove('bg-gray-50', 'bg-white');
+                    stockInput.classList.add('bg-gray-200', 'cursor-not-allowed');
+
+                    // Disabled false agar status unlimited terkirim, tapi validasi stok di-ignore di backend
                     stockInput.disabled = false;
-                    stockInput.placeholder = "0";
-                    stockInput.classList.remove('bg-gray-200');
-                    if(stockInput.value === "") stockInput.value = oldStockVal;
+
+                    restockContainer.classList.add('hidden');
+                    restockInput.value = '';
+                } else {
+                    // Jika di-uncheck, kembalikan ke normal jika tidak ada supplier
+                    if (supplierSelect.value === "") {
+                        stockInput.setAttribute('readonly', true);
+                        stockInput.classList.remove('bg-gray-50', 'bg-white');
+                        stockInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'text-gray-500');
+                        stockInput.placeholder = "0";
+                    }
+
+                    if (restockContainer.classList.contains('hidden') && supplierSelect.value === "") {
+                        restockContainer.classList.remove('hidden');
+                    }
                 }
             }
         }
@@ -302,26 +361,24 @@
 
             if (typeSelect.value === "") {
                 valueInput.disabled = true;
-                valueInput.classList.add('bg-gray-200');
+                valueInput.classList.add('bg-gray-200', 'cursor-not-allowed');
             } else {
                 valueInput.disabled = false;
-                valueInput.classList.remove('bg-gray-200');
+                valueInput.classList.remove('bg-gray-200', 'cursor-not-allowed');
             }
         }
 
-        // 4. Event Listeners & Init
+        // 4. Init
         document.addEventListener('DOMContentLoaded', function() {
             handleDiscountChange();
-            updateStockLogic(); // Jalankan logic awal
+            updateStockLogic();
 
-            // Listener perubahan Supplier
             supplierSelect.addEventListener('change', updateStockLogic);
-
-            // Listener ketikan di kolom Restock
-            restockInput.addEventListener('input', updateStockLogic); // Kalkulasi realtime
-
-            // Listener Checkbox Unlimited
-            unlimitedCheckbox.addEventListener('change', handleUnlimitedCheck);
+            restockInput.addEventListener('input', updateStockLogic);
+            unlimitedCheckbox.addEventListener('change', function() {
+                handleUnlimitedCheck();
+                updateStockLogic();
+            });
         });
     </script>
 @endsection
